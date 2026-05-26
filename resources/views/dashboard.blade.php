@@ -5,7 +5,6 @@
 
 @section('content')
 <div class="container-fluid">
-    <!-- Statistics Cards -->
     <div class="row g-4 mb-4">
         <div class="col-md-3">
             <div class="stat-card bg-stat1 d-flex align-items-center justify-content-between">
@@ -45,9 +44,7 @@
         </div>
     </div>
 
-    <!-- Quick Actions & Recent Appointments -->
     <div class="row g-4">
-        <!-- Quick Actions -->
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
@@ -69,7 +66,6 @@
             </div>
         </div>
 
-        <!-- Recent Appointments -->
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header">
@@ -94,7 +90,12 @@
                                         <td>{{ $appointment->user->name ?? 'N/A' }}</td>
                                         <td>{{ $appointment->barber->name ?? 'N/A' }}</td>
                                         <td>{{ $appointment->service->name ?? 'N/A' }}</td>
-                                        <td>{{ $appointment->appointment_date }} {{ $appointment->appointment_time }}</td>
+                                        
+                                        <td>
+                                            {{ $appointment->appointment_date ? $appointment->appointment_date->format('d-m-Y') : 'N/A' }} 
+                                            {{ \Carbon\Carbon::parse($appointment->appointment_time)->format('H:i') }}
+                                        </td>
+
                                         <td>
                                             @switch($appointment->status)
                                                 @case('pending')

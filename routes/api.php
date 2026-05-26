@@ -28,9 +28,6 @@ Route::get('/services/{id}', [ServiceApiController::class, 'show']);
 Route::get('/barbers', [BarberApiController::class, 'index']);
 Route::get('/barbers/{id}', [BarberApiController::class, 'show']);
 
-Route::get('/services', [ServiceApiController::class, 'index']);
-Route::get('/services/{id}', [ServiceApiController::class, 'show']);
-
 // Protected API Routes (require authentication via Sanctum)
 Route::middleware('auth:sanctum')->group(function () {
     // Auth
@@ -58,8 +55,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users', [UserApiController::class, 'index']);
     Route::get('/users/{id}', [UserApiController::class, 'show']);
     Route::put('/users/{id}', [UserApiController::class, 'update']);
-
-    Route::post('/services', [ServiceApiController::class, 'store']);
-    Route::put('/services/{id}', [ServiceApiController::class, 'update']);
-    Route::delete('/services/{id}', [ServiceApiController::class, 'destroy']);
 });

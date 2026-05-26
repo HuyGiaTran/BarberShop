@@ -166,6 +166,7 @@
             <span>BarberShop</span>
         </div>
         <ul class="nav flex-column">
+            @auth
             <li class="nav-item">
                 <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     <i class="bi bi-speedometer2"></i>
@@ -194,11 +195,32 @@
                 <hr style="border-color: rgba(255,255,255,0.1); margin: 10px 20px;">
             </li>
             <li class="nav-item">
-                <a href="{{ route('login') }}" class="nav-link">
-                    <i class="bi bi-box-arrow-right"></i>
-                    <span>Đăng xuất</span>
+                {{-- Logout dùng POST form để bảo mật (CSRF) --}}
+                <form method="POST" action="{{ route('logout') }}" id="logoutForm">
+                    @csrf
+                    <button type="submit" class="nav-link w-100 text-start border-0 bg-transparent"
+                        onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Đăng xuất</span>
+                    </button>
+                </form>
+            </li>
+            @endauth
+
+            @guest
+            <li class="nav-item">
+                <a href="{{ route('login') }}" class="nav-link {{ request()->routeIs('login') ? 'active' : '' }}">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    <span>Đăng nhập</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a href="{{ route('register') }}" class="nav-link {{ request()->routeIs('register') ? 'active' : '' }}">
+                    <i class="bi bi-person-plus"></i>
+                    <span>Đăng ký</span>
+                </a>
+            </li>
+            @endguest
         </ul>
     </div>
 
@@ -208,12 +230,34 @@
         <div class="navbar-top">
             <h5 class="mb-0">@yield('page-title', 'Dashboard')</h5>
             <div class="user-info">
-                <span>Xin chào, Admin</span>
-                <div class="avatar">
-                    <i class="bi bi-person"></i>
+                @auth
+                <span>Xin chào, <strong>{{ Auth::user()->name }}</strong>
+                    @if(Auth::user()->role === 'admin')
+                        <span class="badge bg-danger ms-1" style="font-size:0.7rem;">Admin</span>
+                    @endif
+                </span>
+                <div class="avatar" title="{{ Auth::user()->email }}">
+                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                 </div>
+                @endauth
             </div>
         </div>
+
+        {{-- Flash messages --}}
+        @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+            <i class="bi bi-check-circle-fill"></i>
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        @endif
+        @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        @endif
 
         <!-- Content -->
         @yield('content')

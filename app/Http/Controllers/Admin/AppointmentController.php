@@ -42,7 +42,7 @@ class AppointmentController extends Controller
     public function create()
     {
         // Truyền dữ liệu ra form chọn
-        $users = User::all();
+        $users = User::where('role', 'customer')->get();
         $barbers = Barber::where('is_active', true)->get();
         $services = Service::all();
         return view('appointments.create', compact('users', 'barbers', 'services'));
@@ -113,7 +113,7 @@ class AppointmentController extends Controller
      */
     public function edit(Appointment $appointment)
     {
-        $users = User::all();
+        $users = User::where('role', 'customer')->get();
         $barbers = Barber::where('is_active', true)->get();
         $services = Service::all();
         return view('appointments.edit', compact('appointment', 'users', 'barbers', 'services'));

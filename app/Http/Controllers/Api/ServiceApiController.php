@@ -20,7 +20,7 @@ class ServiceApiController extends Controller
             'success' => true,
             'message' => 'Danh sách dịch vụ',
             'data' => $services,
-        ]);
+        ], 200);
     }
 
     /**

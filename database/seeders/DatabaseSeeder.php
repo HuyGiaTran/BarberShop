@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Quản Trị Viên',
             'email' => 'admin@gmail.com',
             'password' => Hash::make('password'), // Mật khẩu là: password
+            'role' => 'admin',
         ]);
 
         // 2. TẠO 10 TÀI KHOẢN KHÁCH HÀNG
@@ -42,6 +43,7 @@ class DatabaseSeeder extends Seeder
                 'name' => $name,
                 'email' => $emailPrefix . '@gmail.com',
                 'password' => Hash::make('password'),
+                'role' => 'customer',
             ]));
         }
 

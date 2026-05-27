@@ -14,6 +14,17 @@ class BarberSeeder extends Seeder
      */
     public function run(): void
     {
+          User::updateOrCreate(
+        ['email' => 'admin@gmail.com'],
+        [
+            'name' => 'Admin',
+            'phone' => '0912345690',
+            'bio' => 'admin',
+            'password' => Hash::make('admin123'),
+            'role' => 'admin',
+        ]
+    );
+
         $barbers = [
             [
                 'name' => 'Anh Tuan',
@@ -45,6 +56,7 @@ class BarberSeeder extends Seeder
                 ]
             );
 
+    
             Barber::updateOrCreate(
                 ['user_id' => $user->id],
                 [

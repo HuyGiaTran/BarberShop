@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Service extends Model
@@ -12,6 +13,7 @@ class Service extends Model
         'description',
         'price',
         'duration_minutes',
+        'barber_id',
     ];
 
     protected $casts = [
@@ -19,7 +21,15 @@ class Service extends Model
         'duration_minutes' => 'integer',
     ];
 
+    /**thuộc về một barber
+     */
+    public function barber(): BelongsTo
+    {
+        return $this->belongsTo(Barber::class);
+    }
+
     /**
+     * Một dịch vụ 
      * Một dịch vụ có nhiều lịch hẹn
      */
     public function appointments(): HasMany

@@ -6,8 +6,8 @@
     <div class="card-header d-flex justify-content-between align-items-center">
         <span>Chi tiết Dịch vụ</span>
         <div>
-            <a href="{{ route('services.edit', $service->id) }}" class="btn btn-warning btn-sm"><i class="bi bi-pencil"></i> Sửa</a>
-            <a href="{{ route('services.index') }}" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left"></i> Quay lại</a>
+            <a href="{{ route('admin.services.edit', $service->id) }}" class="btn btn-warning btn-sm"><i class="bi bi-pencil"></i> Sửa</a>
+            <a href="{{ route('admin.services.index') }}" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left"></i> Quay lại</a>
         </div>
     </div>
     <div class="card-body">

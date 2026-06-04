@@ -13,7 +13,7 @@
 <div class="card mb-4 border-0 shadow-sm">
     <div class="card-header bg-light fw-bold text-secondary"><i class="bi bi-funnel"></i> Bộ lọc lịch hẹn</div>
     <div class="card-body">
-        <form action="{{ route('appointments.index') }}" method="GET" class="row g-3">
+        <form action="{{ route('admin.appointments.index') }}" method="GET" class="row g-3">
             <div class="col-md-4">
                 <label for="date" class="form-label small fw-bold">Ngày hẹn</label>
                 <input type="date" class="form-control" id="date" name="date" value="{{ request('date') }}">
@@ -30,7 +30,7 @@
             </div>
             <div class="col-md-4 d-flex align-items-end gap-2">
                 <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Lọc kết quả</button>
-                <a href="{{ route('appointments.index') }}" class="btn btn-outline-secondary w-100">Xóa bộ lọc</a>
+                <a href="{{ route('admin.appointments.index') }}" class="btn btn-outline-secondary w-100">Xóa bộ lọc</a>
             </div>
         </form>
     </div>
@@ -39,7 +39,7 @@
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
         <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-calendar3"></i> Sổ ghi lịch hẹn</h5>
-        <a href="{{ route('appointments.create') }}" class="btn btn-success btn-sm"><i class="bi bi-plus-circle"></i> Đặt lịch mới</a>
+        <a href="{{ route('admin.appointments.create') }}" class="btn btn-success btn-sm"><i class="bi bi-plus-circle"></i> Đặt lịch mới</a>
     </div>
     <div class="card-body p-0">
         @if(isset($appointments) && count($appointments) > 0)
@@ -85,18 +85,18 @@
                             </td>
                             <td>
                                 @if($apt->status == 'pending')
-                                    <form action="{{ route('appointments.updateStatus', $apt->id) }}" method="POST" class="d-inline">
+                                    <form action="{{ route('admin.appointments.updateStatus', $apt->id) }}" method="POST" class="d-inline">
                                         @csrf @method('PATCH')
                                         <input type="hidden" name="status" value="confirmed">
                                         <button type="submit" class="btn btn-sm btn-outline-primary py-0 px-1">Xác nhận</button>
                                     </form>
-                                    <form action="{{ route('appointments.updateStatus', $apt->id) }}" method="POST" class="d-inline">
+                                    <form action="{{ route('admin.appointments.updateStatus', $apt->id) }}" method="POST" class="d-inline">
                                         @csrf @method('PATCH')
                                         <input type="hidden" name="status" value="cancelled">
                                         <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1" onclick="return confirm('Hủy lịch này?')">Hủy</button>
                                     </form>
                                 @elseif($apt->status == 'confirmed')
-                                    <form action="{{ route('appointments.updateStatus', $apt->id) }}" method="POST" class="d-inline">
+                                    <form action="{{ route('admin.appointments.updateStatus', $apt->id) }}" method="POST" class="d-inline">
                                         @csrf @method('PATCH')
                                         <input type="hidden" name="status" value="completed">
                                         <button type="submit" class="btn btn-sm btn-outline-success py-0 px-1">Xong</button>
@@ -107,8 +107,8 @@
                             </td>
                             <td class="pe-3">
                                 <div class="btn-group">
-                                    <a href="{{ route('appointments.edit', $apt->id) }}" class="btn btn-sm btn-light border text-warning" title="Chỉnh sửa"><i class="bi bi-pencil-square"></i></a>
-                                    <form action="{{ route('appointments.destroy', $apt->id) }}" method="POST" class="d-inline">
+                                    <a href="{{ route('admin.appointments.edit', $apt->id) }}" class="btn btn-sm btn-light border text-warning" title="Chỉnh sửa"><i class="bi bi-pencil-square"></i></a>
+                                    <form action="{{ route('admin.appointments.destroy', $apt->id) }}" method="POST" class="d-inline">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-light border text-danger" onclick="return confirm('Xóa vĩnh viễn lịch hẹn này khỏi danh sách?')" title="Xóa bỏ"><i class="bi bi-trash"></i></button>
                                     </form>

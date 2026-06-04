@@ -16,7 +16,7 @@
             </div>
         @endif
 
-        <form action="{{ route('services.store') }}" method="POST" class="row g-3">
+        <form action="{{ route('admin.services.store') }}" method="POST" class="row g-3">
             @csrf
 
             <div class="col-md-6">
@@ -74,7 +74,7 @@
 
             <div class="col-12">
                 <button type="submit" class="btn btn-barber"><i class="bi bi-check-circle"></i> Lưu dịch vụ</button>
-                <a href="{{ route('services.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+                <a href="{{ route('admin.services.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
             </div>
         </form>
     </div>

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\BarberController;
 use App\Http\Controllers\Admin\ServiceController;
@@ -13,9 +14,10 @@ use App\Http\Controllers\Auth\RegisterController;
 | Web Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register web routes for your application.
-|
 */
+
+// Public routes (Không yêu cầu đăng nhập)
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Auth routes (Chỉ dành cho Guest - người chưa đăng nhập)
 Route::middleware('guest')->group(function () {
@@ -25,13 +27,16 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [RegisterController::class, 'register']);
 });
 
-// Protected routes (Chỉ dành cho người đã đăng nhập)
-Route::middleware('auth')->group(function () {
-    // Đăng xuất
-    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+// Logout (dành cho tất cả authenticated users)
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-    // Trang chủ - Dashboard
-    Route::get('/', [DashboardController::class, 'index']);
+// ============================================================
+// ADMIN ROUTES (prefix: /admin, name: admin.*)
+// Chỉ user có role = 'admin' mới truy cập được
+// ============================================================
+Route::middleware(['auth', 'admin'])->prefix('/admin')->name('admin.')->group(function () {
+
+    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // CRUD Barbers
@@ -67,4 +72,15 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{appointment}', [AppointmentController::class, 'destroy'])->name('destroy');
         Route::patch('/{appointment}/status', [AppointmentController::class, 'updateStatus'])->name('updateStatus');
     });
+});
+
+// ============================================================
+// BARBER ROUTES (prefix: /barber, name: barber.*)
+// Chỉ user có role = 'barber' mới truy cập được
+// ============================================================
+Route::middleware(['auth', 'barber'])->prefix('/barber')->name('barber.')->group(function () {
+    // Barber Dashboard (Member 4 sẽ code sau)
+    Route::get('/dashboard', function () {
+        return view('barber.dashboard');
+    })->name('dashboard');
 });

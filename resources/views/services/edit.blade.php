@@ -16,7 +16,7 @@
             </div>
         @endif
 
-        <form action="{{ route('services.update', $service->id) }}" method="POST" class="row g-3">
+        <form action="{{ route('admin.services.update', $service->id) }}" method="POST" class="row g-3">
             @csrf
             @method('PUT')
 
@@ -75,7 +75,7 @@
 
             <div class="col-12">
                 <button type="submit" class="btn btn-warning"><i class="bi bi-check-circle"></i> Cập nhật</button>
-                <a href="{{ route('services.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+                <a href="{{ route('admin.services.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
             </div>
         </form>
     </div>

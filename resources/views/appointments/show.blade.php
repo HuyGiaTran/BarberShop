@@ -16,7 +16,7 @@
         @else
             <p class="text-muted">Không tìm thấy lịch hẹn.</p>
         @endif
-        <a href="{{ route('appointments.index') }}" class="btn btn-secondary">Quay lại</a>
+        <a href="{{ route('admin.appointments.index') }}" class="btn btn-secondary">Quay lại</a>
     </div>
 </div>
 @endsection

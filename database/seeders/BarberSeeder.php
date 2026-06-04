@@ -19,7 +19,6 @@ class BarberSeeder extends Seeder
         [
             'name' => 'Admin',
             'phone' => '0912345690',
-            'bio' => 'admin',
             'password' => Hash::make('admin123'),
             'role' => 'admin',
         ]

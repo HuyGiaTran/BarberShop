@@ -167,26 +167,26 @@
         </div>
         <ul class="nav flex-column">
             @auth
-            <li class="nav-item">
-                <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+             <li class="nav-item">
+                <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                     <i class="bi bi-speedometer2"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{{ route('barbers.index') }}" class="nav-link {{ request()->routeIs('barbers.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.barbers.index') }}" class="nav-link {{ request()->routeIs('admin.barbers.*') ? 'active' : '' }}">
                     <i class="bi bi-people"></i>
                     <span>Quản lý Barber</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{{ route('services.index') }}" class="nav-link {{ request()->routeIs('services.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.services.index') }}" class="nav-link {{ request()->routeIs('admin.services.*') ? 'active' : '' }}">
                     <i class="bi bi-tag"></i>
                     <span>Quản lý Dịch vụ</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{{ route('appointments.index') }}" class="nav-link {{ request()->routeIs('appointments.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.appointments.index') }}" class="nav-link {{ request()->routeIs('admin.appointments.*') ? 'active' : '' }}">
                     <i class="bi bi-calendar-check"></i>
                     <span>Lịch hẹn</span>
                 </a>

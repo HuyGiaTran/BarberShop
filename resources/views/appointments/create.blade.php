@@ -18,7 +18,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('appointments.store') }}" method="POST">
+                <form action="{{ route('admin.appointments.store') }}" method="POST">
                     @csrf
                     
                     <div class="mb-3">
@@ -98,7 +98,7 @@
                     </div>
 
                     <div class="d-flex justify-content-end gap-2 border-top pt-3">
-                        <a href="{{ route('appointments.index') }}" class="btn btn-secondary px-4">Quay lại danh sách</a>
+                        <a href="{{ route('admin.appointments.index') }}" class="btn btn-secondary px-4">Quay lại danh sách</a>
                         <button type="submit" class="btn btn-success px-4"><i class="bi bi-check-circle"></i> Đăng ký lịch hẹn</button>
                     </div>
                 </form>

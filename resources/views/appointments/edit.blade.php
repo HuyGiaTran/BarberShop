@@ -18,7 +18,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('appointments.update', $appointment->id) }}" method="POST">
+                <form action="{{ route('admin.appointments.update', $appointment->id) }}" method="POST">
                     @csrf
                     @method('PUT')
                     
@@ -97,7 +97,7 @@
                     </div>
 
                     <div class="d-flex justify-content-end gap-2 border-top pt-3">
-                        <a href="{{ route('appointments.index') }}" class="btn btn-secondary px-4">Hủy thay đổi</a>
+                        <a href="{{ route('admin.appointments.index') }}" class="btn btn-secondary px-4">Hủy thay đổi</a>
                         <button type="submit" class="btn btn-primary px-4"><i class="bi bi-save2"></i> Lưu chỉnh sửa</button>
                     </div>
                 </form>

@@ -8,7 +8,7 @@
     <div class="card-header d-flex justify-content-between align-items-center">
         <span>Chi tiết Barber</span>
 
-        <a href="{{ route('barbers.index') }}" class="btn btn-secondary btn-sm">
+        <a href="{{ route('admin.barbers.index') }}" class="btn btn-secondary btn-sm">
             Quay lại
         </a>
     </div>
@@ -92,11 +92,11 @@
                     </table>
 
                     <div class="d-flex gap-2">
-                        <a href="{{ route('barbers.edit', $barber->id) }}" class="btn btn-warning">
+                        <a href="{{ route('admin.barbers.edit', $barber->id) }}" class="btn btn-warning">
                             Sửa Barber
                         </a>
 
-                        <form action="{{ route('barbers.destroy', $barber->id) }}"
+                        <form action="{{ route('admin.barbers.destroy', $barber->id) }}"
                               method="POST"
                               onsubmit="return confirm('Bạn có chắc muốn xóa barber này không?')">
                             @csrf
@@ -107,7 +107,7 @@
                             </button>
                         </form>
 
-                        <a href="{{ route('barbers.index') }}" class="btn btn-secondary">
+                        <a href="{{ route('admin.barbers.index') }}" class="btn btn-secondary">
                             Quay lại
                         </a>
                     </div>
@@ -116,7 +116,7 @@
         @else
             <p class="text-muted">Không tìm thấy barber.</p>
 
-            <a href="{{ route('barbers.index') }}" class="btn btn-secondary">
+            <a href="{{ route('admin.barbers.index') }}" class="btn btn-secondary">
                 Quay lại
             </a>
         @endif

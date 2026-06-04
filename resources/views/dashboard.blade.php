@@ -52,13 +52,13 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-3">
-                        <a href="{{ route('appointments.create') }}" class="btn btn-barber">
+                        <a href="{{ route('admin.appointments.create') }}" class="btn btn-barber">
                             <i class="bi bi-plus-circle me-2"></i>Tạo lịch hẹn mới
                         </a>
-                        <a href="{{ route('barbers.create') }}" class="btn btn-outline-primary">
+                        <a href="{{ route('admin.barbers.create') }}" class="btn btn-outline-primary">
                             <i class="bi bi-person-plus me-2"></i>Thêm Barber
                         </a>
-                        <a href="{{ route('services.create') }}" class="btn btn-outline-success">
+                        <a href="{{ route('admin.services.create') }}" class="btn btn-outline-success">
                             <i class="bi bi-plus-tag me-2"></i>Thêm dịch vụ
                         </a>
                     </div>

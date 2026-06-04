@@ -8,7 +8,7 @@
     <div class="card-header d-flex justify-content-between align-items-center">
         <span>Danh sách Barber</span>
 
-        <a href="{{ route('barbers.create') }}" class="btn btn-barber btn-sm">
+        <a href="{{ route('admin.barbers.create') }}" class="btn btn-barber btn-sm">
             <i class="bi bi-plus-circle"></i> Thêm Barber
         </a>
     </div>
@@ -20,7 +20,7 @@
             </div>
         @endif
 
-        <form action="{{ route('barbers.index') }}" method="GET" class="mb-3">
+        <form action="{{ route('admin.barbers.index') }}" method="GET" class="mb-3">
             <div class="row g-2">
                 <div class="col-md-10">
                     <input type="text"
@@ -35,7 +35,7 @@
                         <i class="bi bi-search"></i> Tìm
                     </button>
 
-                    <a href="{{ route('barbers.index') }}" class="btn btn-secondary">
+                    <a href="{{ route('admin.barbers.index') }}" class="btn btn-secondary">
                         Reset
                     </a>
                 </div>
@@ -78,17 +78,17 @@
                                 </td>
 
                                 <td>
-                                    <a href="{{ route('barbers.show', $barber->id) }}"
+                                    <a href="{{ route('admin.barbers.show', $barber->id) }}"
                                        class="btn btn-sm btn-info">
                                         <i class="bi bi-eye"></i>
                                     </a>
 
-                                    <a href="{{ route('barbers.edit', $barber->id) }}"
+                                    <a href="{{ route('admin.barbers.edit', $barber->id) }}"
                                        class="btn btn-sm btn-warning">
                                         <i class="bi bi-pencil"></i>
                                     </a>
 
-                                    <form action="{{ route('barbers.destroy', $barber->id) }}"
+                                    <form action="{{ route('admin.barbers.destroy', $barber->id) }}"
                                           method="POST"
                                           style="display:inline">
                                         @csrf
@@ -113,7 +113,7 @@
         @else
             <div class="alert alert-warning mb-0">
                 Chưa có barber nào.
-                <a href="{{ route('barbers.create') }}">Thêm barber</a>
+                <a href="{{ route('admin.barbers.create') }}">Thêm barber</a>
             </div>
         @endif
     </div>

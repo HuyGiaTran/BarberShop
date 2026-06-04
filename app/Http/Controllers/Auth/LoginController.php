@@ -44,9 +44,16 @@ class LoginController extends Controller
             // Mục đích: Chống tấn công Session Fixation
             $request->session()->regenerate();
 
-            // Bước 4: Redirect về trang intended hoặc về dashboard
-            return redirect()->intended(route('dashboard'))
-                ->with('success', 'Đăng nhập thành công! Chào mừng ' . Auth::user()->name);
+            // Bước 4: Redirect theo role
+            $user = Auth::user();
+            $redirectRoute = match ($user->role) {
+                'admin'   => 'dashboard',
+                'barber'  => 'barber.dashboard',
+                default   => 'home',
+            };
+
+            return redirect()->intended(route($redirectRoute))
+                ->with('success', 'Đăng nhập thành công! Chào mừng ' . $user->name);
         }
 
         // Bước 5: Nếu thất bại, quay lại form với thông báo lỗi

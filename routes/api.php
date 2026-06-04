@@ -12,24 +12,41 @@ use App\Http\Controllers\Api\AuthApiController;
 | API Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group.
+| Here is where you can register API routes for your application.
 |
 */
 
-// Public API Routes
+// ========================================================================
+// PUBLIC API (Không yêu cầu đăng nhập)
+// ========================================================================
+
+// Auth
 Route::post('/login', [AuthApiController::class, 'login']);
 Route::post('/register', [AuthApiController::class, 'register']);
 
+// Services
 Route::get('/services', [ServiceApiController::class, 'index']);
 Route::get('/services/{id}', [ServiceApiController::class, 'show']);
 
+// Barbers
 Route::get('/barbers', [BarberApiController::class, 'index']);
 Route::get('/barbers/{id}', [BarberApiController::class, 'show']);
 
-// Protected API Routes (require authentication via Sanctum)
+// Reviews của Barber (ai cũng xem được)
+Route::get('/barbers/{id}/reviews', [App\Http\Controllers\Api\ReviewApiController::class, 'index']);
+
+// Chatbot AI - Hỏi đáp (ai cũng hỏi được)
+Route::post('/chatbot/ask', [App\Http\Controllers\Api\ChatbotController::class, 'ask']);
+
+// VNPAY Callback (cổng thanh toán gọi về, không cần auth)
+Route::post('/vnpay/callback', [App\Http\Controllers\Api\VnpayController::class, 'callback']);
+Route::post('/vnpay/ipn', [App\Http\Controllers\Api\VnpayController::class, 'ipn']);
+
+// ========================================================================
+// PROTECTED API (Yêu cầu đăng nhập qua Sanctum)
+// ========================================================================
 Route::middleware('auth:sanctum')->group(function () {
+
     // Auth
     Route::post('/logout', [AuthApiController::class, 'logout']);
     Route::get('/user', [AuthApiController::class, 'user']);
@@ -55,4 +72,37 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users', [UserApiController::class, 'index']);
     Route::get('/users/{id}', [UserApiController::class, 'show']);
     Route::put('/users/{id}', [UserApiController::class, 'update']);
+
+    // ====================================================================
+    // API MỚI - Booking nâng cao (Member 3)
+    // ====================================================================
+
+    // Xem khung giờ trống của Barber theo ngày
+    Route::get('/barbers/{id}/slots', [AppointmentApiController::class, 'slots']);
+
+    // Tạo URL thanh toán VNPAY
+    Route::post('/vnpay/create-payment', [App\Http\Controllers\Api\VnpayController::class, 'createPayment']);
+
+    // ====================================================================
+    // API MỚI - Đánh giá & Loyalty (Member 2)
+    // ====================================================================
+
+    // Gửi đánh giá mới
+    Route::post('/reviews', [App\Http\Controllers\Api\ReviewApiController::class, 'store']);
+
+    // Kiểm tra điểm thưởng & hạng thành viên
+    Route::get('/loyalty', [App\Http\Controllers\Api\LoyaltyApiController::class, 'show']);
+
+    // ====================================================================
+    // API MỚI - Thống kê (Member 5)
+    // ====================================================================
+
+    // Doanh thu theo ngày/tuần/tháng
+    Route::get('/statistics/revenue', [App\Http\Controllers\Api\StatisticApiController::class, 'revenue']);
+
+    // Khung giờ cao điểm trong tuần
+    Route::get('/statistics/peak-hours', [App\Http\Controllers\Api\StatisticApiController::class, 'peakHours']);
+
+    // Dịch vụ được ưa chuộng nhất
+    Route::get('/statistics/services', [App\Http\Controllers\Api\StatisticApiController::class, 'popularServices']);
 });

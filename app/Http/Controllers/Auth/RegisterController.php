@@ -65,8 +65,8 @@ class RegisterController extends Controller
         // Bước 4: Regenerate session
         $request->session()->regenerate();
 
-        // Bước 5: Redirect về dashboard với thông báo thành công
-        return redirect()->route('dashboard')
+        // Bước 5: Redirect về trang chủ (giao diện khách hàng)
+        return redirect()->route('home')
             ->with('success', 'Đăng ký thành công! Chào mừng bạn, ' . $user->name . '!');
     }
 }

@@ -368,7 +368,23 @@
                         </div>
                         <div class="d-flex justify-content-between align-items-center">
                             <span style="color:var(--text-muted);font-size:.85rem;">Trạng thái</span>
-                            <span class="badge-status badge-completed"><i class="bi bi-circle-fill me-1" style="font-size:.5rem;"></i>Đang hoạt động</span>
+                            <form method="POST" action="{{ route('barber.status.update') }}" class="d-flex gap-2">
+                                @csrf
+                                @method('PATCH')
+                                @php
+                                    $statusColor = match($barber->working_status) {
+                                        'active' => 'var(--success)',
+                                        'busy' => 'var(--danger)',
+                                        'off' => 'var(--warning)',
+                                        default => 'var(--text)'
+                                    };
+                                @endphp
+                                <select name="working_status" class="form-select form-select-sm text-center" style="background:var(--dark3);color:{{ $statusColor }};font-weight:600;border-color:rgba(200,169,126,.1);font-size:.8rem;padding-block:2px;box-shadow:none;text-align:center;text-align-last:center;" onchange="this.form.submit()">
+                                    <option value="active" {{ $barber->working_status === 'active' ? 'selected' : '' }} style="color:var(--success);">Sẵn sàng</option>
+                                    <option value="busy" {{ $barber->working_status === 'busy' ? 'selected' : '' }} style="color:var(--danger);">Bận</option>
+                                    <option value="off" {{ $barber->working_status === 'off' ? 'selected' : '' }} style="color:var(--warning);">Nghỉ phép</option>
+                                </select>
+                            </form>
                         </div>
                     </div>
                 </div>

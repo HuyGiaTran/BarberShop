@@ -15,6 +15,7 @@ class Barber extends Model
         'bio',
         'avatar',
         'is_active',
+        'working_status',
     ];
 
     protected $casts = [

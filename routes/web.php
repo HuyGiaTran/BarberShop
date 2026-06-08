@@ -90,4 +90,7 @@ Route::middleware(['auth', 'barber'])->prefix('/barber')->name('barber.')->group
     // Hồ sơ cá nhân
     Route::get('/profile', [BarberDashboardController::class, 'profile'])->name('profile');
     Route::put('/profile', [BarberDashboardController::class, 'updateProfile'])->name('profile.update');
+
+    // Trạng thái hoạt động
+    Route::patch('/status', [BarberDashboardController::class, 'updateWorkingStatus'])->name('status.update');
 });

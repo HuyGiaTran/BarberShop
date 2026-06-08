@@ -246,4 +246,30 @@ class BarberDashboardController extends Controller
 
         return back()->with('success', 'Cập nhật hồ sơ thành công!');
     }
+
+    /**
+     * Cập nhật trạng thái làm việc (Đang hoạt động / Bận / Nghỉ)
+     */
+    public function updateWorkingStatus(Request $request)
+    {
+        $barber = $this->getBarber();
+
+        if (!$barber) {
+            return back()->with('error', 'Không tìm thấy hồ sơ Barber.');
+        }
+
+        $validated = $request->validate([
+            'working_status' => 'required|string|in:active,busy,off',
+        ]);
+
+        $barber->update(['working_status' => $validated['working_status']]);
+
+        $statusLabels = [
+            'active' => 'Sẵn sàng',
+            'busy' => 'Bận',
+            'off' => 'Nghỉ phép',
+        ];
+
+        return back()->with('success', 'Đã cập nhật trạng thái: ' . $statusLabels[$validated['working_status']]);
+    }
 }

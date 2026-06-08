@@ -107,11 +107,24 @@
                         @if($barber->phone)
                         <p style="color:var(--text-muted);font-size:.85rem;"><i class="bi bi-telephone me-1"></i>{{ $barber->phone }}</p>
                         @endif
-                        <div class="d-flex justify-content-center gap-2 mt-2">
-                            <span style="padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:600;{{ $barber->is_active ? 'background:rgba(74,222,128,.15);color:var(--success);' : 'background:rgba(248,113,113,.15);color:var(--danger);' }}">
-                                <i class="bi bi-circle-fill me-1" style="font-size:.4rem;"></i>
-                                {{ $barber->is_active ? 'Đang hoạt động' : 'Ngưng hoạt động' }}
-                            </span>
+                        <div class="d-flex justify-content-center gap-2 mt-3">
+                            <form method="POST" action="{{ route('barber.status.update') }}">
+                                @csrf
+                                @method('PATCH')
+                                @php
+                                    $statusColor = match($barber->working_status) {
+                                        'active' => 'var(--success)',
+                                        'busy' => 'var(--danger)',
+                                        'off' => 'var(--warning)',
+                                        default => 'var(--text)'
+                                    };
+                                @endphp
+                                <select name="working_status" class="form-select form-select-sm text-center" style="background:var(--dark3);color:{{ $statusColor }};font-weight:600;border-color:rgba(200,169,126,.2);font-size:.8rem;padding-block:4px;border-radius:20px;box-shadow:none;min-width:140px;text-align:center;text-align-last:center;" onchange="this.form.submit()">
+                                    <option value="active" {{ $barber->working_status === 'active' ? 'selected' : '' }} style="color:var(--success);">Sẵn sàng</option>
+                                    <option value="busy" {{ $barber->working_status === 'busy' ? 'selected' : '' }} style="color:var(--danger);">Bận</option>
+                                    <option value="off" {{ $barber->working_status === 'off' ? 'selected' : '' }} style="color:var(--warning);">Nghỉ phép</option>
+                                </select>
+                            </form>
                         </div>
                     </div>
                     <div style="border-top:1px solid rgba(200,169,126,.06);">

@@ -33,14 +33,14 @@ Route::get('/barbers', [BarberApiController::class, 'index']);
 Route::get('/barbers/{id}', [BarberApiController::class, 'show']);
 
 // Reviews của Barber (ai cũng xem được)
-Route::get('/barbers/{id}/reviews', [App\Http\Controllers\Api\ReviewApiController::class, 'index']);
+// Route::get('/barbers/{id}/reviews', [App\Http\Controllers\Api\ReviewApiController::class, 'index']);
 
 // Chatbot AI - Hỏi đáp (ai cũng hỏi được)
-Route::post('/chatbot/ask', [App\Http\Controllers\Api\ChatbotController::class, 'ask']);
+// Route::post('/chatbot/ask', [App\Http\Controllers\Api\ChatbotController::class, 'ask']);
 
 // VNPAY Callback (cổng thanh toán gọi về, không cần auth)
-Route::post('/vnpay/callback', [App\Http\Controllers\Api\VnpayController::class, 'callback']);
-Route::post('/vnpay/ipn', [App\Http\Controllers\Api\VnpayController::class, 'ipn']);
+// Route::post('/vnpay/callback', [App\Http\Controllers\Api\VnpayController::class, 'callback']);
+// Route::post('/vnpay/ipn', [App\Http\Controllers\Api\VnpayController::class, 'ipn']);
 
 // ========================================================================
 // PROTECTED API (Yêu cầu đăng nhập qua Sanctum)
@@ -78,31 +78,31 @@ Route::middleware('auth:sanctum')->group(function () {
     // ====================================================================
 
     // Xem khung giờ trống của Barber theo ngày
-    Route::get('/barbers/{id}/slots', [AppointmentApiController::class, 'slots']);
+    // Route::get('/barbers/{id}/slots', [AppointmentApiController::class, 'slots']);
 
     // Tạo URL thanh toán VNPAY
-    Route::post('/vnpay/create-payment', [App\Http\Controllers\Api\VnpayController::class, 'createPayment']);
+    // Route::post('/vnpay/create-payment', [App\Http\Controllers\Api\VnpayController::class, 'createPayment']);
 
     // ====================================================================
     // API MỚI - Đánh giá & Loyalty (Member 2)
     // ====================================================================
 
     // Gửi đánh giá mới
-    Route::post('/reviews', [App\Http\Controllers\Api\ReviewApiController::class, 'store']);
+    // Route::post('/reviews', [App\Http\Controllers\Api\ReviewApiController::class, 'store']);
 
     // Kiểm tra điểm thưởng & hạng thành viên
-    Route::get('/loyalty', [App\Http\Controllers\Api\LoyaltyApiController::class, 'show']);
+    // Route::get('/loyalty', [App\Http\Controllers\Api\LoyaltyApiController::class, 'show']);
 
     // ====================================================================
     // API MỚI - Thống kê (Member 5)
     // ====================================================================
 
     // Doanh thu theo ngày/tuần/tháng
-    Route::get('/statistics/revenue', [App\Http\Controllers\Api\StatisticApiController::class, 'revenue']);
+    // Route::get('/statistics/revenue', [App\Http\Controllers\Api\StatisticApiController::class, 'revenue']);
 
     // Khung giờ cao điểm trong tuần
-    Route::get('/statistics/peak-hours', [App\Http\Controllers\Api\StatisticApiController::class, 'peakHours']);
+    // Route::get('/statistics/peak-hours', [App\Http\Controllers\Api\StatisticApiController::class, 'peakHours']);
 
     // Dịch vụ được ưa chuộng nhất
-    Route::get('/statistics/services', [App\Http\Controllers\Api\StatisticApiController::class, 'popularServices']);
+    // Route::get('/statistics/services', [App\Http\Controllers\Api\StatisticApiController::class, 'popularServices']);
 });

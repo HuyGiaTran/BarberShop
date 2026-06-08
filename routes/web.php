@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\AppointmentController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Barber\BarberDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -79,8 +80,14 @@ Route::middleware(['auth', 'admin'])->prefix('/admin')->name('admin.')->group(fu
 // Chỉ user có role = 'barber' mới truy cập được
 // ============================================================
 Route::middleware(['auth', 'barber'])->prefix('/barber')->name('barber.')->group(function () {
-    // Barber Dashboard (Member 4 sẽ code sau)
-    Route::get('/dashboard', function () {
-        return view('barber.dashboard');
-    })->name('dashboard');
+    // Dashboard
+    Route::get('/dashboard', [BarberDashboardController::class, 'index'])->name('dashboard');
+
+    // Lịch hẹn
+    Route::get('/appointments', [BarberDashboardController::class, 'appointments'])->name('appointments');
+    Route::patch('/appointments/{appointment}/status', [BarberDashboardController::class, 'updateAppointmentStatus'])->name('appointments.updateStatus');
+
+    // Hồ sơ cá nhân
+    Route::get('/profile', [BarberDashboardController::class, 'profile'])->name('profile');
+    Route::put('/profile', [BarberDashboardController::class, 'updateProfile'])->name('profile.update');
 });

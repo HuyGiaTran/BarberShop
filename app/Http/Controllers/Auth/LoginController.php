@@ -47,7 +47,7 @@ class LoginController extends Controller
             // Bước 4: Redirect theo role
             $user = Auth::user();
             $redirectRoute = match ($user->role) {
-                'admin'   => 'dashboard',
+                'admin'   => 'admin.dashboard',
                 'barber'  => 'barber.dashboard',
                 default   => 'home',
             };

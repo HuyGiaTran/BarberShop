@@ -36,4 +36,12 @@ class Barber extends Model
     {
         return $this->hasMany(Appointment::class);
     }
+
+    /**
+     * Một barber có nhiều dịch vụ
+     */
+    public function services(): HasMany
+    {
+        return $this->hasMany(Service::class);
+    }
 }

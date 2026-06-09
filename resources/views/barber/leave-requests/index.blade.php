@@ -59,7 +59,7 @@
         }
         .sidebar .nav {
             flex: 1;
-            padding: 16px 0;
+            padding:0;
         }
         .sidebar .nav-link {
             color: var(--text-muted);
@@ -75,25 +75,14 @@
         }
         .sidebar .nav-link:hover,
         .sidebar .nav-link.active {
-            color: var(--primary);
-            background: rgba(200, 169, 126, .06);
+            color: var(--primary); 
+            background: rgba(200, 169, 126, .06); 
             border-left-color: var(--primary);
-            margin-left: -24px;
-            margin-right: -20px;
-            padding-left: 24px;
-            padding-right: 20px;
         }
         .sidebar .nav-link i {
             font-size: 1.1rem;
             width: 20px;
             text-align: center;
-        }
-        .sidebar .nav-item {
-            display: flex;
-        }
-        .sidebar .nav {
-            display: flex;
-            flex-direction: column;
         }
 
         /* Main */
@@ -153,16 +142,6 @@
         .empty-state p {
             font-size: 1rem;
             margin-bottom: 20px;
-        }
-
-        /* Make empty-state button smaller (match header button) */
-        .empty-state .btn-new {
-            padding: 8px 16px;
-            font-size: .95rem;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
         }
 
         /* Card */
@@ -297,8 +276,7 @@
         }
 
         .btn-view:hover {
-            background: rgba(200, 169, 126, .1);
-            border-left-color: var(--primary);
+            background: transparent;
             color: var(--primary);
             margin-left: 0;
         }
@@ -313,8 +291,7 @@
         }
 
         .btn-cancel:hover {
-            background: rgba(200, 169, 126, .1);
-            border-left-color: var(--primary);
+            background: transparent;
             color: var(--primary);
             margin-left: 0;
         }
@@ -384,18 +361,18 @@
                     <i class="bi bi-person-circle"></i> <span>Hồ sơ</span>
                 </a>
             </li>
-            <li class="nav-item mt-auto" style="margin-top:auto!important;">
-                <hr style="border-color:rgba(200,169,126,.1);margin:10px 20px;">
-            </li>
-            <li class="nav-item">
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="nav-link w-100 text-start" style="border:none;background:none;">
-                        <i class="bi bi-box-arrow-left"></i> <span>Đăng xuất</span>
-                    </button>
-                </form>
-            </li>
         </ul>
+        
+        <div class="mt-auto">
+            <hr style="border-color:rgba(200,169,126,.1);margin:10px 20px;">
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="nav-link w-100 text-start border-0 bg-transparent"
+                    onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
+                    <i class="bi bi-box-arrow-right"></i> <span>Đăng xuất</span>
+                </button>
+            </form>
+        </div>
     </div>
 
     <!-- Main Content -->
@@ -493,10 +470,16 @@
                     </div>
                 @endif
             @else
-                <div class="empty-state">
-                    <i class="bi bi-inbox"></i>
-                    <p style="font-size: 1.1rem; margin-bottom: 8px;">Chưa có đơn xin nghỉ phép nào</p>
-                    <p style="font-size: .9rem; margin-bottom: 24px;">Tạo đơn mới để gửi yêu cầu nghỉ phép.</p>
+                <div class="header flex-column align-items-center justify-content-center text-center" style="padding: 60px 20px;">
+                    <div style="width: 80px; height: 80px; background: rgba(200, 169, 126, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                        <i class="bi bi-inbox" style="font-size: 2.5rem; color: var(--primary); margin: 0;"></i>
+                    </div>
+    
+                    <p style="font-size: 1.15rem; font-weight: 600; color: var(--text); margin-bottom: 8px;">Chưa có đơn xin nghỉ phép nào</p>
+                    <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 24px; max-width: 350px;">
+                        Tạo đơn mới để gửi yêu cầu nghỉ phép.
+                    </p>
+    
                     <a href="{{ route('barber.leave_requests.create') }}" class="btn-new">
                         <i class="bi bi-plus-lg"></i>Tạo đơn mới
                     </a>

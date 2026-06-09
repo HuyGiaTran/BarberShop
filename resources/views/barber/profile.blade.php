@@ -46,21 +46,43 @@
 </head>
 <body>
     <div class="sidebar">
-        <div class="brand"><i class="bi bi-scissors"></i><span>Barber Panel</span></div>
+        <div class="brand">
+            <i class="bi bi-scissors"></i>
+            <span>Barber Panel</span>
+        </div>
         <ul class="nav flex-column">
-            <li class="nav-item"><a href="{{ route('barber.dashboard') }}" class="nav-link"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a></li>
-            <li class="nav-item"><a href="{{ route('barber.appointments') }}" class="nav-link"><i class="bi bi-calendar2-week"></i><span>Lịch hẹn</span></a></li>
-            <li class="nav-item"><a href="{{ route('barber.leave_requests.index') }}" class="nav-link"><i class="bi bi-file-earmark-text"></i><span>Đơn xin nghỉ</span></a></li>
-            <li class="nav-item"><a href="{{ route('barber.profile') }}" class="nav-link active"><i class="bi bi-person-circle"></i><span>Hồ sơ</span></a></li>
-            <li class="nav-item" style="margin-top:auto;"><hr style="border-color:rgba(200,169,126,.1);margin:10px 20px;"></li>
             <li class="nav-item">
-                <form method="POST" action="{{ route('logout') }}">@csrf
-                    <button type="submit" class="nav-link w-100 text-start border-0 bg-transparent" onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
-                        <i class="bi bi-box-arrow-right"></i><span>Đăng xuất</span>
-                    </button>
-                </form>
+                <a href="{{ route('barber.dashboard') }}" class="nav-link {{ request()->routeIs('barber.dashboard') ? 'active' : '' }}">
+                    <i class="bi bi-grid-1x2-fill"></i> <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('barber.appointments') }}" class="nav-link {{ request()->routeIs('barber.appointments') ? 'active' : '' }}">
+                    <i class="bi bi-calendar2-week"></i> <span>Lịch hẹn</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('barber.leave_requests.index') }}" class="nav-link {{ request()->routeIs('barber.leave_requests.*') ? 'active' : '' }}">
+                    <i class="bi bi-file-earmark-text"></i> <span>Đơn xin nghỉ</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('barber.profile') }}" class="nav-link {{ request()->routeIs('barber.profile') ? 'active' : '' }}">
+                    <i class="bi bi-person-circle"></i> <span>Hồ sơ</span>
+                </a>
             </li>
         </ul>
+        
+        <div class="mt-auto">
+            <hr style="border-color:rgba(200,169,126,.1);margin:10px 20px;">
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="nav-link w-100 text-start border-0 bg-transparent"
+                    onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
+                    <i class="bi bi-box-arrow-right"></i> <span>Đăng xuất</span>
+                </button>
+            </form>
+        </div>
     </div>
 
     <div class="main-content">
@@ -120,7 +142,7 @@
                                         default => 'var(--text)'
                                     };
                                 @endphp
-                                <select name="working_status" class="form-select form-select-sm text-center" style="background:var(--dark3);color:{{ $statusColor }};font-weight:600;border-color:rgba(200,169,126,.2);font-size:.8rem;padding-block:4px;border-radius:20px;box-shadow:none;min-width:140px;text-align:center;text-align-last:center;" onchange="this.form.submit()">
+                                <select name="working_status" class="form-select form-select-sm text-center" style="background:var(--dark3);color:{{ $statusColor }};font-weight:600;border-color:rgba(200,169,126,.1);font-size:.8rem;padding: 4px 4px;box-shadow:none;text-align:center;text-align-last:center;border-radius:8px;" onchange="this.form.submit()">
                                     <option value="active" {{ $barber->working_status === 'active' ? 'selected' : '' }} style="color:var(--success);">Sẵn sàng</option>
                                     <option value="busy" {{ $barber->working_status === 'busy' ? 'selected' : '' }} style="color:var(--danger);">Bận</option>
                                     @if($barber->working_status === 'off')

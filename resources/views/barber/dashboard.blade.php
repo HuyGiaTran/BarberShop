@@ -41,7 +41,7 @@
         }
         .sidebar .brand i { color:var(--primary); font-size:1.6rem; }
         .sidebar .brand span { color:var(--primary); font-size:1.3rem; font-weight:700; margin-left:8px; letter-spacing:1px; }
-        .sidebar .nav { flex:1; padding:16px 0; }
+        .sidebar .nav { flex:1; padding:0; }
         .sidebar .nav-link {
             color:var(--text-muted); padding:12px 24px; font-size:.9rem; font-weight:500;
             border-left:3px solid transparent; transition:all .25s; display:flex; align-items:center; gap:12px;
@@ -197,19 +197,18 @@
                     <i class="bi bi-person-circle"></i> <span>Hồ sơ</span>
                 </a>
             </li>
-            <li class="nav-item mt-auto" style="margin-top:auto!important;">
-                <hr style="border-color:rgba(200,169,126,.1);margin:10px 20px;">
-            </li>
-            <li class="nav-item">
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="nav-link w-100 text-start border-0 bg-transparent"
-                        onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
-                        <i class="bi bi-box-arrow-right"></i> <span>Đăng xuất</span>
-                    </button>
-                </form>
-            </li>
         </ul>
+        
+        <div class="mt-auto">
+            <hr style="border-color:rgba(200,169,126,.1);margin:10px 20px;">
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="nav-link w-100 text-start border-0 bg-transparent"
+                    onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
+                    <i class="bi bi-box-arrow-right"></i> <span>Đăng xuất</span>
+                </button>
+            </form>
+        </div>
     </div>
 
     <!-- Main Content -->
@@ -383,7 +382,7 @@
                                         default => 'var(--text)'
                                     };
                                 @endphp
-                                <select name="working_status" class="form-select form-select-sm text-center" style="background:var(--dark3);color:{{ $statusColor }};font-weight:600;border-color:rgba(200,169,126,.1);font-size:.8rem;padding-block:2px;box-shadow:none;text-align:center;text-align-last:center;" onchange="this.form.submit()">
+                                <select name="working_status" class="form-select form-select-sm text-center" style="background:var(--dark3);color:{{ $statusColor }};font-weight:600;border-color:rgba(200,169,126,.1);font-size:.8rem;padding: 4px 4px;box-shadow:none;text-align:center;text-align-last:center;border-radius:8px;" onchange="this.form.submit()">
                                     <option value="active" {{ $barber->working_status === 'active' ? 'selected' : '' }} style="color:var(--success);">Sẵn sàng</option>
                                     <option value="busy" {{ $barber->working_status === 'busy' ? 'selected' : '' }} style="color:var(--danger);">Bận</option>
                                 </select>

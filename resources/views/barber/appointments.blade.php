@@ -58,21 +58,43 @@
 <body>
     <!-- Sidebar -->
     <div class="sidebar">
-        <div class="brand"><i class="bi bi-scissors"></i><span>Barber Panel</span></div>
+        <div class="brand">
+            <i class="bi bi-scissors"></i>
+            <span>Barber Panel</span>
+        </div>
         <ul class="nav flex-column">
-            <li class="nav-item"><a href="{{ route('barber.dashboard') }}" class="nav-link"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a></li>
-            <li class="nav-item"><a href="{{ route('barber.appointments') }}" class="nav-link active"><i class="bi bi-calendar2-week"></i><span>Lịch hẹn</span></a></li>
-            <li class="nav-item"><a href="{{ route('barber.leave_requests.index') }}" class="nav-link"><i class="bi bi-file-earmark-text"></i><span>Đơn xin nghỉ</span></a></li>
-            <li class="nav-item"><a href="{{ route('barber.profile') }}" class="nav-link"><i class="bi bi-person-circle"></i><span>Hồ sơ</span></a></li>
-            <li class="nav-item" style="margin-top:auto;"><hr style="border-color:rgba(200,169,126,.1);margin:10px 20px;"></li>
             <li class="nav-item">
-                <form method="POST" action="{{ route('logout') }}">@csrf
-                    <button type="submit" class="nav-link w-100 text-start border-0 bg-transparent" onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
-                        <i class="bi bi-box-arrow-right"></i><span>Đăng xuất</span>
-                    </button>
-                </form>
+                <a href="{{ route('barber.dashboard') }}" class="nav-link {{ request()->routeIs('barber.dashboard') ? 'active' : '' }}">
+                    <i class="bi bi-grid-1x2-fill"></i> <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('barber.appointments') }}" class="nav-link {{ request()->routeIs('barber.appointments') ? 'active' : '' }}">
+                    <i class="bi bi-calendar2-week"></i> <span>Lịch hẹn</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('barber.leave_requests.index') }}" class="nav-link {{ request()->routeIs('barber.leave_requests.*') ? 'active' : '' }}">
+                    <i class="bi bi-file-earmark-text"></i> <span>Đơn xin nghỉ</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('barber.profile') }}" class="nav-link {{ request()->routeIs('barber.profile') ? 'active' : '' }}">
+                    <i class="bi bi-person-circle"></i> <span>Hồ sơ</span>
+                </a>
             </li>
         </ul>
+        
+        <div class="mt-auto">
+            <hr style="border-color:rgba(200,169,126,.1);margin:10px 20px;">
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="nav-link w-100 text-start border-0 bg-transparent"
+                    onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
+                    <i class="bi bi-box-arrow-right"></i> <span>Đăng xuất</span>
+                </button>
+            </form>
+        </div>
     </div>
 
     <div class="main-content">

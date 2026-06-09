@@ -59,7 +59,7 @@
         }
         .sidebar .nav {
             flex: 1;
-            padding: 16px 0;
+            padding:0;
         }
         .sidebar .nav-link {
             color: var(--text-muted);
@@ -75,25 +75,14 @@
         }
         .sidebar .nav-link:hover,
         .sidebar .nav-link.active {
-            color: var(--primary);
-            background: rgba(200, 169, 126, .06);
+            color: var(--primary); 
+            background: rgba(200, 169, 126, .06); 
             border-left-color: var(--primary);
-            margin-left: -24px;
-            margin-right: -20px;
-            padding-left: 24px;
-            padding-right: 20px;
         }
         .sidebar .nav-link i {
             font-size: 1.1rem;
             width: 20px;
             text-align: center;
-        }
-        .sidebar .nav-item {
-            display: flex;
-        }
-        .sidebar .nav {
-            display: flex;
-            flex-direction: column;
         }
 
         /* Main */
@@ -316,18 +305,18 @@
                     <i class="bi bi-person-circle"></i> <span>Hồ sơ</span>
                 </a>
             </li>
-            <li class="nav-item mt-auto" style="margin-top:auto!important;">
-                <hr style="border-color:rgba(200,169,126,.1);margin:10px 20px;">
-            </li>
-            <li class="nav-item">
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="nav-link w-100 text-start" style="border:none;background:none;">
-                        <i class="bi bi-box-arrow-left"></i> <span>Đăng xuất</span>
-                    </button>
-                </form>
-            </li>
         </ul>
+        
+        <div class="mt-auto">
+            <hr style="border-color:rgba(200,169,126,.1);margin:10px 20px;">
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="nav-link w-100 text-start border-0 bg-transparent"
+                    onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
+                    <i class="bi bi-box-arrow-right"></i> <span>Đăng xuất</span>
+                </button>
+            </form>
+        </div>
     </div>
 
     <!-- Main Content -->
@@ -623,25 +612,31 @@
         })();
 
         // Custom validation messages
-        document.getElementById('applicant_phone')?.addEventListener('invalid', (e) => {
+        const phoneInput = document.getElementById('applicant_phone');
+        phoneInput?.addEventListener('invalid', (e) => {
             if (e.target.validity.valueMissing) {
                 e.target.setCustomValidity('Vui lòng nhập số điện thoại.');
             } else if (e.target.validity.patternMismatch) {
                 e.target.setCustomValidity('Số điện thoại phải có đúng 10 chữ số.');
             }
         });
+        phoneInput?.addEventListener('input', (e) => e.target.setCustomValidity('')); // Xoá lỗi khi nhập lại
 
-        document.getElementById('end_time')?.addEventListener('invalid', (e) => {
+        const endTimeInput = document.getElementById('end_time');
+        endTimeInput?.addEventListener('invalid', (e) => {
             if (e.target.validity.valueMissing) {
                 e.target.setCustomValidity('Vui lòng chọn ngày giờ kết thúc.');
             }
         });
+        endTimeInput?.addEventListener('input', (e) => e.target.setCustomValidity('')); // Xoá lỗi khi nhập lại
 
-        document.getElementById('commitment')?.addEventListener('invalid', (e) => {
+        const commitmentInput = document.getElementById('commitment');
+        commitmentInput?.addEventListener('invalid', (e) => {
             if (e.target.validity.valueMissing) {
                 e.target.setCustomValidity('Vui lòng xác nhận cam kết.');
             }
         });
+        commitmentInput?.addEventListener('change', (e) => e.target.setCustomValidity('')); // Xoá lỗi khi tick lại
     </script>
 </body>
 </html>

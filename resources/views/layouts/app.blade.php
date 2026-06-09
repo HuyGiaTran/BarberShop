@@ -168,19 +168,19 @@
         <ul class="nav flex-column">
             @auth
              <li class="nav-item">
-                <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }} d-block w-100">
                     <i class="bi bi-speedometer2"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{{ route('admin.barbers.index') }}" class="nav-link {{ request()->routeIs('admin.barbers.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.barbers.index') }}" class="nav-link {{ request()->routeIs('admin.barbers.*') ? 'active' : '' }} d-block w-100">
                     <i class="bi bi-people"></i>
                     <span>Quản lý Barber</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{{ route('admin.services.index') }}" class="nav-link {{ request()->routeIs('admin.services.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.services.index') }}" class="nav-link {{ request()->routeIs('admin.services.*') ? 'active' : '' }} d-block w-100">
                     <i class="bi bi-tag"></i>
                     <span>Quản lý Dịch vụ</span>
                 </a>

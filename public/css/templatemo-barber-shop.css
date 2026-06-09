@@ -841,3 +841,16 @@ strong {
   }
 }
 
+.barber-menu .nav-link {
+    display: block !important;
+    width: 100% !important;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+/* Đổi màu vàng khi hover và khi đang ở trang hiện tại (active) */
+.barber-menu .nav-link:hover, 
+.barber-menu .nav-link.active {
+    background-color: #bc8f30 !important;
+    color: #ffffff !important;
+}

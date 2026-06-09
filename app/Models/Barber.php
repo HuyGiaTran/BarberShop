@@ -45,4 +45,12 @@ class Barber extends Model
     {
         return $this->hasMany(Service::class);
     }
+
+    /**
+     * Một barber có nhiều đơn xin nghỉ phép
+     */
+    public function leaveRequests(): HasMany
+    {
+        return $this->hasMany(LeaveRequest::class);
+    }
 }

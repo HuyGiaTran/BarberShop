@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\AppointmentController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Barber\BarberDashboardController;
+use App\Http\Controllers\Barber\LeaveRequestController;
+use App\Http\Controllers\Admin\LeaveRequestController as AdminLeaveRequestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -73,6 +75,14 @@ Route::middleware(['auth', 'admin'])->prefix('/admin')->name('admin.')->group(fu
         Route::delete('/{appointment}', [AppointmentController::class, 'destroy'])->name('destroy');
         Route::patch('/{appointment}/status', [AppointmentController::class, 'updateStatus'])->name('updateStatus');
     });
+
+    // Đơn xin nghỉ phép
+    Route::prefix('/leave-requests')->name('leave_requests.')->group(function () {
+        Route::get('/', [AdminLeaveRequestController::class, 'index'])->name('index');
+        Route::get('/{leaveRequest}', [AdminLeaveRequestController::class, 'show'])->name('show');
+        Route::post('/{leaveRequest}/approve', [AdminLeaveRequestController::class, 'approve'])->name('approve');
+        Route::post('/{leaveRequest}/reject', [AdminLeaveRequestController::class, 'reject'])->name('reject');
+    });
 });
 
 // ============================================================
@@ -93,4 +103,13 @@ Route::middleware(['auth', 'barber'])->prefix('/barber')->name('barber.')->group
 
     // Trạng thái hoạt động
     Route::patch('/status', [BarberDashboardController::class, 'updateWorkingStatus'])->name('status.update');
+
+    // Đơn xin nghỉ phép
+    Route::prefix('/leave-requests')->name('leave_requests.')->group(function () {
+        Route::get('/', [LeaveRequestController::class, 'index'])->name('index');
+        Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');
+        Route::post('/', [LeaveRequestController::class, 'store'])->name('store');
+        Route::get('/{leaveRequest}', [LeaveRequestController::class, 'show'])->name('show');
+        Route::delete('/{leaveRequest}', [LeaveRequestController::class, 'cancel'])->name('cancel');
+    });
 });

@@ -248,7 +248,8 @@ class BarberDashboardController extends Controller
     }
 
     /**
-     * Cập nhật trạng thái làm việc (Đang hoạt động / Bận / Nghỉ)
+     * Cập nhật trạng thái làm việc (Đang hoạt động / Bận)
+     * Không cho phép thay đổi trạng thái thành "Nghỉ phép" - phải gửi đơn xin nghỉ
      */
     public function updateWorkingStatus(Request $request)
     {
@@ -259,7 +260,7 @@ class BarberDashboardController extends Controller
         }
 
         $validated = $request->validate([
-            'working_status' => 'required|string|in:active,busy,off',
+            'working_status' => 'required|string|in:active,busy',
         ]);
 
         $barber->update(['working_status' => $validated['working_status']]);
@@ -267,7 +268,6 @@ class BarberDashboardController extends Controller
         $statusLabels = [
             'active' => 'Sẵn sàng',
             'busy' => 'Bận',
-            'off' => 'Nghỉ phép',
         ];
 
         return back()->with('success', 'Đã cập nhật trạng thái: ' . $statusLabels[$validated['working_status']]);

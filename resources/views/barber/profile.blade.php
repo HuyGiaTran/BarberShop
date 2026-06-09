@@ -50,6 +50,7 @@
         <ul class="nav flex-column">
             <li class="nav-item"><a href="{{ route('barber.dashboard') }}" class="nav-link"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a></li>
             <li class="nav-item"><a href="{{ route('barber.appointments') }}" class="nav-link"><i class="bi bi-calendar2-week"></i><span>Lịch hẹn</span></a></li>
+            <li class="nav-item"><a href="{{ route('barber.leave_requests.index') }}" class="nav-link"><i class="bi bi-file-earmark-text"></i><span>Đơn xin nghỉ</span></a></li>
             <li class="nav-item"><a href="{{ route('barber.profile') }}" class="nav-link active"><i class="bi bi-person-circle"></i><span>Hồ sơ</span></a></li>
             <li class="nav-item" style="margin-top:auto;"><hr style="border-color:rgba(200,169,126,.1);margin:10px 20px;"></li>
             <li class="nav-item">
@@ -122,9 +123,14 @@
                                 <select name="working_status" class="form-select form-select-sm text-center" style="background:var(--dark3);color:{{ $statusColor }};font-weight:600;border-color:rgba(200,169,126,.2);font-size:.8rem;padding-block:4px;border-radius:20px;box-shadow:none;min-width:140px;text-align:center;text-align-last:center;" onchange="this.form.submit()">
                                     <option value="active" {{ $barber->working_status === 'active' ? 'selected' : '' }} style="color:var(--success);">Sẵn sàng</option>
                                     <option value="busy" {{ $barber->working_status === 'busy' ? 'selected' : '' }} style="color:var(--danger);">Bận</option>
-                                    <option value="off" {{ $barber->working_status === 'off' ? 'selected' : '' }} style="color:var(--warning);">Nghỉ phép</option>
+                                    @if($barber->working_status === 'off')
+                                    <option value="off" selected style="color:var(--warning);">Nghỉ phép</option>
+                                    @endif
                                 </select>
                             </form>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <a href="{{ route('barber.leave_requests.create') }}" class="btn btn-sm btn-outline-gold" style="border-color:var(--primary);color:var(--primary);"><i class="bi bi-file-earmark-text me-1"></i>Đơn xin nghỉ phép</a>
                         </div>
                     </div>
                     <div style="border-top:1px solid rgba(200,169,126,.06);">

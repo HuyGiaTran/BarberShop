@@ -7,6 +7,7 @@ use App\Models\Appointment;
 use App\Models\User;
 use App\Models\Barber;
 use App\Models\Service;
+use App\Models\LeaveRequest;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -89,6 +90,24 @@ class AppointmentController extends Controller
             ]);
         }
 
+        // Kiểm tra xem barber có đơn nghỉ phép được duyệt trong thời gian này không
+        $aptDateTime = Carbon::createFromFormat('Y-m-d H:i', $request->appointment_date . ' ' . $request->appointment_time);
+        $hasApprovedLeave = LeaveRequest::where('barber_id', $request->barber_id)
+            ->where('status', 'approved')
+            ->whereDate('start_time', '<=', $request->appointment_date)
+            ->whereDate('end_time', '>=', $request->appointment_date)
+            ->get()
+            ->filter(function ($leave) use ($aptDateTime) {
+                return $aptDateTime >= $leave->start_time && $aptDateTime < $leave->end_time;
+            })
+            ->isNotEmpty();
+
+        if ($hasApprovedLeave) {
+            return back()->withInput()->withErrors([
+                'barber_id' => 'Thợ cắt tóc này đang nghỉ phép vào thời gian này. Vui lòng chọn barber khác hoặc thời gian khác.'
+            ]);
+        }
+
         // Tạo lịch hẹn mới
         Appointment::create([
             'user_id' => $request->user_id,
@@ -158,6 +177,29 @@ class AppointmentController extends Controller
             return back()->withInput()->withErrors([
                 'appointment_time' => 'Thợ cắt tóc này đã có lịch hẹn cố định vào khung giờ này. Vui lòng chọn giờ khác.'
             ]);
+        }
+
+        // Kiểm tra xem barber có đơn nghỉ phép được duyệt trong thời gian này không (nếu thay đổi barber hoặc thời gian)
+        if ($request->barber_id != $appointment->barber_id || 
+            $request->appointment_date != $appointment->appointment_date ||
+            $request->appointment_time != $appointment->appointment_time) {
+            
+            $aptDateTime = Carbon::createFromFormat('Y-m-d H:i', $request->appointment_date . ' ' . $request->appointment_time);
+            $hasApprovedLeave = LeaveRequest::where('barber_id', $request->barber_id)
+                ->where('status', 'approved')
+                ->whereDate('start_time', '<=', $request->appointment_date)
+                ->whereDate('end_time', '>=', $request->appointment_date)
+                ->get()
+                ->filter(function ($leave) use ($aptDateTime) {
+                    return $aptDateTime >= $leave->start_time && $aptDateTime < $leave->end_time;
+                })
+                ->isNotEmpty();
+
+            if ($hasApprovedLeave) {
+                return back()->withInput()->withErrors([
+                    'barber_id' => 'Thợ cắt tóc này đang nghỉ phép vào thời gian này. Vui lòng chọn barber khác hoặc thời gian khác.'
+                ]);
+            }
         }
 
         // Cập nhật vào DB

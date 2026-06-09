@@ -62,6 +62,7 @@
         <ul class="nav flex-column">
             <li class="nav-item"><a href="{{ route('barber.dashboard') }}" class="nav-link"><i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span></a></li>
             <li class="nav-item"><a href="{{ route('barber.appointments') }}" class="nav-link active"><i class="bi bi-calendar2-week"></i><span>Lịch hẹn</span></a></li>
+            <li class="nav-item"><a href="{{ route('barber.leave_requests.index') }}" class="nav-link"><i class="bi bi-file-earmark-text"></i><span>Đơn xin nghỉ</span></a></li>
             <li class="nav-item"><a href="{{ route('barber.profile') }}" class="nav-link"><i class="bi bi-person-circle"></i><span>Hồ sơ</span></a></li>
             <li class="nav-item" style="margin-top:auto;"><hr style="border-color:rgba(200,169,126,.1);margin:10px 20px;"></li>
             <li class="nav-item">

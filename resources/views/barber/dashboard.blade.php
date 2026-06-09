@@ -188,6 +188,11 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="{{ route('barber.leave_requests.index') }}" class="nav-link {{ request()->routeIs('barber.leave_requests.*') ? 'active' : '' }}">
+                    <i class="bi bi-file-earmark-text"></i> <span>Đơn xin nghỉ</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="{{ route('barber.profile') }}" class="nav-link {{ request()->routeIs('barber.profile') ? 'active' : '' }}">
                     <i class="bi bi-person-circle"></i> <span>Hồ sơ</span>
                 </a>
@@ -375,16 +380,17 @@
                                     $statusColor = match($barber->working_status) {
                                         'active' => 'var(--success)',
                                         'busy' => 'var(--danger)',
-                                        'off' => 'var(--warning)',
                                         default => 'var(--text)'
                                     };
                                 @endphp
                                 <select name="working_status" class="form-select form-select-sm text-center" style="background:var(--dark3);color:{{ $statusColor }};font-weight:600;border-color:rgba(200,169,126,.1);font-size:.8rem;padding-block:2px;box-shadow:none;text-align:center;text-align-last:center;" onchange="this.form.submit()">
                                     <option value="active" {{ $barber->working_status === 'active' ? 'selected' : '' }} style="color:var(--success);">Sẵn sàng</option>
                                     <option value="busy" {{ $barber->working_status === 'busy' ? 'selected' : '' }} style="color:var(--danger);">Bận</option>
-                                    <option value="off" {{ $barber->working_status === 'off' ? 'selected' : '' }} style="color:var(--warning);">Nghỉ phép</option>
                                 </select>
                             </form>
+                        </div>
+                        <div class="mt-3 text-end">
+                            <a href="{{ route('barber.leave_requests.create') }}" class="btn btn-sm btn-gold"><i class="bi bi-file-earmark-text me-1"></i>Đơn xin nghỉ phép</a>
                         </div>
                     </div>
                 </div>

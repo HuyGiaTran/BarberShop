@@ -63,7 +63,7 @@ Nhiệm vụ của bạn: Trả lời ngắn gọn, thân thiện và chính xá
         try {
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
-            ])->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={$apiKey}", $payload);
+            ])->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={$apiKey}", $payload);
 
             if ($response->successful()) {
                 $data = $response->json();

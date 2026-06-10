@@ -17,6 +17,7 @@ Route::get('/services/{id}', [ServiceApiController::class, 'show']);
 Route::get('/barbers', [BarberApiController::class, 'index']);
 Route::get('/barbers/{id}', [BarberApiController::class, 'show']);
 Route::get('/barbers/{id}/reviews', [App\Http\Controllers\Api\ReviewApiController::class, 'index']);
+Route::get('/barbers/{id}/slots', [AppointmentApiController::class, 'slots']);
 
 Route::post('/chatbot/ask', [App\Http\Controllers\Api\ChatbotController::class, 'ask']);
 Route::match(['GET', 'POST'], '/vnpay/callback', [VnpayController::class, 'callback']);
@@ -47,7 +48,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users/{id}', [UserApiController::class, 'show']);
     Route::put('/users/{id}', [UserApiController::class, 'update']);
 
-    Route::get('/barbers/{id}/slots', [AppointmentApiController::class, 'slots']);
     Route::post('/vnpay/create-payment', [VnpayController::class, 'createPayment']);
     Route::post('/reviews', [App\Http\Controllers\Api\ReviewApiController::class, 'store']);
     Route::get('/loyalty', [App\Http\Controllers\Api\LoyaltyApiController::class, 'show']);

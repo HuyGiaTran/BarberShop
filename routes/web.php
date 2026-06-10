@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\LeaveRequestController;
 use App\Http\Controllers\Admin\PayrollController;
 use App\Http\Controllers\Admin\ReviewController;
+use App\Http\Controllers\Admin\BarberScheduleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Barber\DashboardController as BarberDashboardController;
@@ -40,6 +41,11 @@ Route::middleware(['auth', 'admin'])->prefix('/admin')->name('admin.')->group(fu
         Route::get('/{barber}/edit', [BarberController::class, 'edit'])->name('edit');
         Route::put('/{barber}', [BarberController::class, 'update'])->name('update');
         Route::delete('/{barber}', [BarberController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('/schedules')->name('schedules.')->group(function () {
+        Route::get('/', [BarberScheduleController::class, 'index'])->name('index');
+        Route::put('/{barber}', [BarberScheduleController::class, 'update'])->name('update');
     });
 
     Route::prefix('/services')->name('services.')->group(function () {

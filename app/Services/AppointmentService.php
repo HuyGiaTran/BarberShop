@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Appointment;
+use App\Models\BarberSchedule;
 use App\Models\LeaveRequest;
 use Carbon\Carbon;
 
@@ -17,16 +18,48 @@ class AppointmentService
             ->exists();
     }
 
-    public function allSlots(): array
+    /**
+     * Lấy danh sách khung giờ trống trong một ngày theo lịch làm việc của Barber
+     */
+    public function allSlots(int $barberId = null, string $appointmentDate = null): array
     {
         $allSlots = [];
 
-        for ($hour = 8; $hour <= 19; $hour++) {
-            $allSlots[] = sprintf('%02d:00', $hour);
+        // Nếu không truyền thông tin, dùng lịch mặc định (cho các chức năng cũ nếu có)
+        $startHour = 8;
+        $startMin = 0;
+        $endHour = 19;
+        $endMin = 30;
 
-            if ($hour < 19) {
-                $allSlots[] = sprintf('%02d:30', $hour);
+        if ($barberId && $appointmentDate) {
+            $date = Carbon::parse($appointmentDate);
+            $dayOfWeek = $date->dayOfWeek; // 0 (Sunday) -> 6 (Saturday)
+
+            $schedule = BarberSchedule::where('barber_id', $barberId)
+                ->where('day_of_week', $dayOfWeek)
+                ->first();
+
+            if ($schedule) {
+                if ($schedule->is_off) {
+                    return []; // Nghỉ làm
+                }
+
+                $start = Carbon::parse($schedule->start_time);
+                $end = Carbon::parse($schedule->end_time);
+                
+                $startHour = $start->hour;
+                $startMin = $start->minute;
+                $endHour = $end->hour;
+                $endMin = $end->minute;
             }
+        }
+
+        $cursor = Carbon::createFromTime($startHour, $startMin);
+        $endTime = Carbon::createFromTime($endHour, $endMin);
+
+        while ($cursor <= $endTime) {
+            $allSlots[] = $cursor->format('H:i');
+            $cursor->addMinutes(30);
         }
 
         return $allSlots;
@@ -76,7 +109,7 @@ class AppointmentService
     public function unavailableSlotsForBarber(int $barberId, string $appointmentDate): array
     {
         if ($this->isBarberOnApprovedLeave($barberId, $appointmentDate)) {
-            return $this->allSlots();
+            return $this->allSlots($barberId, $appointmentDate);
         }
 
         $appointments = Appointment::with('service:id,duration_minutes')
@@ -107,8 +140,14 @@ class AppointmentService
 
     public function availableSlotsForBarber(int $barberId, string $appointmentDate): array
     {
+        $allSlots = $this->allSlots($barberId, $appointmentDate);
+        
+        if (empty($allSlots)) {
+            return []; // Ngày nghỉ của thợ
+        }
+
         return array_values(array_diff(
-            $this->allSlots(),
+            $allSlots,
             $this->unavailableSlotsForBarber($barberId, $appointmentDate)
         ));
     }

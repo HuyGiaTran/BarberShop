@@ -180,6 +180,12 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="{{ route('admin.schedules.index') }}" class="nav-link {{ request()->routeIs('admin.schedules.*') ? 'active' : '' }}">
+                    <i class="bi bi-calendar-range"></i>
+                    <span>Lịch làm việc</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="{{ route('admin.services.index') }}" class="nav-link {{ request()->routeIs('admin.services.*') ? 'active' : '' }}">
                     <i class="bi bi-tag"></i>
                     <span>Quản lý Dịch vụ</span>

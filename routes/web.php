@@ -1,25 +1,21 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\Admin\BarberController;
-use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\AppointmentController;
+use App\Http\Controllers\Admin\BarberController;
+use App\Http\Controllers\Admin\InvoiceController;
+use App\Http\Controllers\Admin\ServiceController;
+use App\Http\Controllers\Admin\LeaveRequestController;
+use App\Http\Controllers\Admin\PayrollController;
+use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Barber\DashboardController as BarberDashboardController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HomeController;
+use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-*/
-
-// Public routes (Không yêu cầu đăng nhập)
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// Auth routes (Chỉ dành cho Guest - người chưa đăng nhập)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login']);
@@ -27,19 +23,15 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [RegisterController::class, 'register']);
 });
 
-// Logout (dành cho tất cả authenticated users)
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-// ============================================================
-// ADMIN ROUTES (prefix: /admin, name: admin.*)
-// Chỉ user có role = 'admin' mới truy cập được
-// ============================================================
-Route::middleware(['auth', 'admin'])->prefix('/admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+});
 
-    // Dashboard
+Route::middleware(['auth', 'admin'])->prefix('/admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // CRUD Barbers
     Route::prefix('/barbers')->name('barbers.')->group(function () {
         Route::get('/', [BarberController::class, 'index'])->name('index');
         Route::get('/create', [BarberController::class, 'create'])->name('create');
@@ -50,7 +42,6 @@ Route::middleware(['auth', 'admin'])->prefix('/admin')->name('admin.')->group(fu
         Route::delete('/{barber}', [BarberController::class, 'destroy'])->name('destroy');
     });
 
-    // CRUD Services
     Route::prefix('/services')->name('services.')->group(function () {
         Route::get('/', [ServiceController::class, 'index'])->name('index');
         Route::get('/create', [ServiceController::class, 'create'])->name('create');
@@ -61,7 +52,6 @@ Route::middleware(['auth', 'admin'])->prefix('/admin')->name('admin.')->group(fu
         Route::delete('/{service}', [ServiceController::class, 'destroy'])->name('destroy');
     });
 
-    // CRUD Appointments
     Route::prefix('/appointments')->name('appointments.')->group(function () {
         Route::get('/', [AppointmentController::class, 'index'])->name('index');
         Route::get('/create', [AppointmentController::class, 'create'])->name('create');
@@ -72,15 +62,30 @@ Route::middleware(['auth', 'admin'])->prefix('/admin')->name('admin.')->group(fu
         Route::delete('/{appointment}', [AppointmentController::class, 'destroy'])->name('destroy');
         Route::patch('/{appointment}/status', [AppointmentController::class, 'updateStatus'])->name('updateStatus');
     });
+
+    Route::prefix('/invoices')->name('invoices.')->group(function () {
+        Route::get('/', [InvoiceController::class, 'index'])->name('index');
+        Route::patch('/{invoice}/mark-cash-paid', [InvoiceController::class, 'markCashPaid'])->name('markCashPaid');
+    });
+
+    Route::prefix('/reviews')->name('reviews.')->group(function () {
+        Route::get('/', [ReviewController::class, 'index'])->name('index');
+        Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('/leave-requests')->name('leave-requests.')->group(function () {
+        Route::get('/', [LeaveRequestController::class, 'index'])->name('index');
+        Route::patch('/{leaveRequest}/status', [LeaveRequestController::class, 'updateStatus'])->name('updateStatus');
+    });
+
+    Route::prefix('/payrolls')->name('payrolls.')->group(function () {
+        Route::get('/', [PayrollController::class, 'index'])->name('index');
+        Route::post('/calculate', [PayrollController::class, 'calculate'])->name('calculate');
+        Route::patch('/{payroll}/mark-paid', [PayrollController::class, 'markPaid'])->name('markPaid');
+    });
 });
 
-// ============================================================
-// BARBER ROUTES (prefix: /barber, name: barber.*)
-// Chỉ user có role = 'barber' mới truy cập được
-// ============================================================
 Route::middleware(['auth', 'barber'])->prefix('/barber')->name('barber.')->group(function () {
-    // Barber Dashboard (Member 4 sẽ code sau)
-    Route::get('/dashboard', function () {
-        return view('barber.dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [BarberDashboardController::class, 'index'])->name('dashboard');
+    Route::post('/toggle-status', [BarberDashboardController::class, 'toggleStatus'])->name('toggleStatus');
 });

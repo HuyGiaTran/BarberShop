@@ -191,6 +191,30 @@
                     <span>Lịch hẹn</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.invoices.index') }}" class="nav-link {{ request()->routeIs('admin.invoices.*') ? 'active' : '' }}">
+                    <i class="bi bi-receipt"></i>
+                    <span>Hóa đơn</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.reviews.index') }}" class="nav-link {{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}">
+                    <i class="bi bi-star"></i>
+                    <span>Quản lý Đánh giá</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.leave-requests.index') }}" class="nav-link {{ request()->routeIs('admin.leave-requests.*') ? 'active' : '' }}">
+                    <i class="bi bi-envelope-paper"></i>
+                    <span>Nghỉ phép</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.payrolls.index') }}" class="nav-link {{ request()->routeIs('admin.payrolls.*') ? 'active' : '' }}">
+                    <i class="bi bi-cash-coin"></i>
+                    <span>Bảng lương</span>
+                </a>
+            </li>
             <li class="nav-item mt-4">
                 <hr style="border-color: rgba(255,255,255,0.1); margin: 10px 20px;">
             </li>

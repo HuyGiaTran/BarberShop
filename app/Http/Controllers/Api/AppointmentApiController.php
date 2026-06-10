@@ -4,12 +4,19 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
+use App\Models\Service;
+use App\Services\AppointmentService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
 
 class AppointmentApiController extends Controller
 {
+    public function __construct(
+        private readonly AppointmentService $appointmentService
+    ) {
+    }
+
     /**
      * GET /api/appointments - Danh sách lịch hẹn (có filter theo status)
      */
@@ -113,6 +120,8 @@ class AppointmentApiController extends Controller
         'status.in' => 'Trạng thái không hợp lệ.',
     ]);
 
+    $service = Service::findOrFail($validated['service_id']);
+
     // Logic chặn hoàn thành lịch hẹn trong tương lai
     if ($request->status === 'completed' && Carbon::parse($request->appointment_date)->isFuture()) {
         return response()->json([
@@ -123,16 +132,28 @@ class AppointmentApiController extends Controller
     }
 
     // Kiểm tra xem thợ cắt tóc đã có lịch trùng giờ chưa
-    $isOverlapping = Appointment::where('barber_id', $request->barber_id)
-        ->where('appointment_date', $request->appointment_date)
-        ->where('appointment_time', $request->appointment_time)
-        ->where('status', '!=', 'cancelled')
-        ->exists();
+    if ($this->appointmentService->isBarberOnApprovedLeave(
+        (int) $validated['barber_id'],
+        $validated['appointment_date']
+    )) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Thợ cắt tóc đang nghỉ phép trong ngày bạn chọn. Vui lòng chọn ngày khác.',
+            'error' => 'barber_on_leave',
+        ], 409, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    $isOverlapping = $this->appointmentService->hasConflict(
+        (int) $validated['barber_id'],
+        $validated['appointment_date'],
+        $validated['appointment_time'],
+        (int) $service->duration_minutes
+    );
 
     if ($isOverlapping) {
         return response()->json([
             'success' => false,
-            'message' => 'Thợ cắt tóc đã có lịch hẹn trong khung giờ này. Vui lòng chọn giờ hoặc thợ khác.',
+            'message' => 'Thợ cắt tóc đã có lịch hẹn bị chồng chéo trong khoảng thời gian này. Vui lòng chọn giờ hoặc thợ khác.',
             'error' => 'appointment_time_conflict',
         ], 409, [], JSON_UNESCAPED_UNICODE);
     }
@@ -140,6 +161,9 @@ class AppointmentApiController extends Controller
     // Tạo lịch hẹn mới
     $appointment = Appointment::create($validated);
     $appointment->load(['user', 'barber', 'service']);
+
+    // Gửi email thông báo
+    $appointment->user->notify(new \App\Notifications\AppointmentBooked($appointment));
 
     return response()->json([
         'success' => true,
@@ -191,6 +215,26 @@ class AppointmentApiController extends Controller
     }
 
     /**
+     * GET /api/barbers/{id}/slots - Danh sách khung giờ trống
+     */
+    public function slots(string $id, Request $request): JsonResponse
+    {
+        $request->validate([
+            'date' => 'required|date',
+        ]);
+
+        $available = $this->appointmentService->availableSlotsForBarber((int) $id, $request->date);
+
+        return response()->json([
+            'success' => true,
+            'data' => $available,
+            'meta' => [
+                'is_on_leave' => $this->appointmentService->isBarberOnApprovedLeave((int) $id, $request->date),
+            ],
+        ]);
+    }
+
+    /**
      * PUT /api/appointments/{id} - Cập nhật lịch hẹn
      */
     public function update(Request $request, string $id): JsonResponse
@@ -230,6 +274,8 @@ class AppointmentApiController extends Controller
         'status.in' => 'Trạng thái không hợp lệ.',
     ]);
 
+    $service = Service::findOrFail($validated['service_id']);
+
     // ❌ Không cho hoàn thành lịch hẹn trong tương lai
     if (
         $validated['status'] === 'completed'
@@ -243,24 +289,41 @@ class AppointmentApiController extends Controller
     }
 
     // ❌ Kiểm tra trùng lịch (loại trừ chính appointment hiện tại)
-    $isOverlapping = Appointment::where('barber_id', $validated['barber_id'])
-        ->where('appointment_date', $validated['appointment_date'])
-        ->where('appointment_time', $validated['appointment_time'])
-        ->where('id', '!=', $appointment->id)
-        ->where('status', '!=', 'cancelled')
-        ->exists();
+    if ($this->appointmentService->isBarberOnApprovedLeave(
+        (int) $validated['barber_id'],
+        $validated['appointment_date']
+    )) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Thợ cắt tóc đang nghỉ phép trong ngày bạn chọn. Vui lòng chọn ngày khác.',
+            'error' => 'barber_on_leave',
+        ], 409, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    $isOverlapping = $this->appointmentService->hasConflict(
+        (int) $validated['barber_id'],
+        $validated['appointment_date'],
+        $validated['appointment_time'],
+        (int) $service->duration_minutes,
+        $appointment->id
+    );
 
     if ($isOverlapping) {
         return response()->json([
             'success' => false,
-            'message' => 'Khung giờ này đã có lịch hẹn. Vui lòng chọn thời gian khác.',
+            'message' => 'Khung giờ này đang bị chồng chéo với lịch hẹn khác. Vui lòng chọn thời gian khác.',
             'error' => 'appointment_time_conflict',
         ], 409);
     }
 
     // ✔ CẬP NHẬT
+    $oldStatus = $appointment->status;
     $appointment->update($validated);
     $appointment->load(['user', 'barber', 'service']);
+
+    if ($oldStatus !== 'cancelled' && $appointment->status === 'cancelled') {
+        $appointment->user->notify(new \App\Notifications\AppointmentCancelled($appointment));
+    }
 
     // ✔ RESPONSE CLEAN
     return response()->json([

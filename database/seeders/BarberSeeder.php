@@ -9,20 +9,17 @@ use Illuminate\Support\Facades\Hash;
 
 class BarberSeeder extends Seeder
 {
-    /**
-     * Seed sample barbers and their linked user accounts.
-     */
     public function run(): void
     {
-          User::updateOrCreate(
-        ['email' => 'admin@gmail.com'],
-        [
-            'name' => 'Admin',
-            'phone' => '0912345690',
-            'password' => Hash::make('admin123'),
-            'role' => 'admin',
-        ]
-    );
+        User::updateOrCreate(
+            ['email' => 'admin@gmail.com'],
+            [
+                'name' => 'Admin',
+                'phone' => '0912345690',
+                'password' => Hash::make('admin123'),
+                'role' => 'admin',
+            ]
+        );
 
         $barbers = [
             [
@@ -55,7 +52,6 @@ class BarberSeeder extends Seeder
                 ]
             );
 
-    
             Barber::updateOrCreate(
                 ['user_id' => $user->id],
                 [

@@ -36,4 +36,27 @@ class Barber extends Model
     {
         return $this->hasMany(Appointment::class);
     }
+
+    /**
+     * Má»™t barber cÃ³ nhiá»u dá»‹ch vá»¥
+     */
+    public function services(): HasMany
+    {
+        return $this->hasMany(Service::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function leaveRequests(): HasMany
+    {
+        return $this->hasMany(LeaveRequest::class);
+    }
+
+    public function payrolls(): HasMany
+    {
+        return $this->hasMany(Payroll::class);
+    }
 }

@@ -80,8 +80,8 @@
             transform: translateX(5px);
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
+        .timeline-item.pending { border-left-color: #fdcb6e; }
         .timeline-item.confirmed { border-left-color: #00b894; }
-        .timeline-item.in-progress { border-left-color: #fdcb6e; }
         .timeline-item.cancelled { border-left-color: #d63031; }
         .timeline-item.completed { border-left-color: #0984e3; }
         .status-badge {
@@ -138,10 +138,21 @@
             </div>
         </div>
 
-        <div class="alert alert-info d-flex align-items-center gap-2">
-            <i class="bi bi-info-circle-fill"></i>
-            Giao diện Barber Dashboard sẽ được phát triển chi tiết bởi <strong>Member 4</strong>.
-            Hiện tại đây là giao diện tạm thời.
+        @if (session('success'))
+        <div class="alert alert-success d-flex align-items-center gap-2">
+            <i class="bi bi-check-circle-fill"></i>
+            {{ session('success') }}
+        </div>
+        @endif
+
+        <div class="alert alert-light border d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <strong>{{ $barber->name }}</strong>
+                <span class="text-muted">| {{ $todayCount }} lịch hôm nay, {{ $completedCount }} đã hoàn thành</span>
+            </div>
+            <span class="badge {{ $barber->is_active ? 'bg-success' : 'bg-secondary' }}">
+                {{ $barber->is_active ? 'Sẵn sàng nhận lịch' : 'Đang bận' }}
+            </span>
         </div>
 
         <div class="row g-4 mb-4">
@@ -162,8 +173,9 @@
                         <i class="bi bi-people me-2"></i>Lịch hẹn hôm nay
                     </div>
                     <div class="card-body text-center py-4">
-                        <div style="font-size: 2.5rem; font-weight: bold;">0</div>
+                        <div style="font-size: 2.5rem; font-weight: bold;">{{ $todayCount }}</div>
                         <div class="text-muted">khách hàng</div>
+                        <div class="small text-muted mt-2">{{ $completedCount }} lịch đã hoàn thành</div>
                     </div>
                 </div>
             </div>
@@ -173,10 +185,25 @@
                         <i class="bi bi-clock me-2"></i>Trạng thái
                     </div>
                     <div class="card-body text-center py-4">
-                        <div class="form-check form-switch" style="font-size: 1.2rem;">
-                            <input class="form-check-input" type="checkbox" role="switch" id="busyMode" checked>
-                            <label class="form-check-label" for="busyMode">Sẵn sàng nhận lịch</label>
-                        </div>
+                        <form method="POST" action="{{ route('barber.toggleStatus') }}">
+                            @csrf
+                            <div class="form-check form-switch d-inline-flex align-items-center gap-2" style="font-size: 1.2rem;">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    role="switch"
+                                    id="busyMode"
+                                    {{ $barber->is_active ? 'checked' : '' }}
+                                    onchange="this.form.submit()"
+                                >
+                                <label class="form-check-label" for="busyMode">
+                                    {{ $barber->is_active ? 'Sẵn sàng nhận lịch' : 'Đang bận' }}
+                                </label>
+                            </div>
+                            <div class="small text-muted mt-3">
+                                Gạt công tắc để bật hoặc tắt trạng thái nhận lịch.
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -187,7 +214,50 @@
                 <i class="bi bi-list-task me-2"></i>Timeline ca cắt hôm nay
             </div>
             <div class="card-body">
-                <p class="text-muted text-center py-5">Chưa có lịch hẹn nào trong ngày hôm nay.</p>
+                @php
+                    $statusClasses = [
+                        'pending' => 'warning text-dark',
+                        'confirmed' => 'success',
+                        'completed' => 'primary',
+                        'cancelled' => 'danger',
+                    ];
+
+                    $statusLabels = [
+                        'pending' => 'Chờ xác nhận',
+                        'confirmed' => 'Đã xác nhận',
+                        'completed' => 'Hoàn thành',
+                        'cancelled' => 'Đã hủy',
+                    ];
+                @endphp
+
+                @forelse ($todayAppointments as $appointment)
+                    @php
+                        $status = $appointment->status;
+                        $badgeClass = $statusClasses[$status] ?? 'secondary';
+                        $label = $statusLabels[$status] ?? ucfirst($status);
+                    @endphp
+
+                    <div class="timeline-item {{ $status }}">
+                        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                            <div>
+                                <div class="fw-bold fs-5">
+                                    {{ \Illuminate\Support\Carbon::parse($appointment->appointment_time)->format('H:i') }}
+                                </div>
+                                <div class="mt-1">
+                                    <strong>{{ $appointment->user->name }}</strong>
+                                    <span class="text-muted">- {{ $appointment->service->name }}</span>
+                                </div>
+                                @if ($appointment->notes)
+                                <div class="small text-muted mt-2">{{ $appointment->notes }}</div>
+                                @endif
+                            </div>
+
+                            <span class="badge bg-{{ $badgeClass }} status-badge">{{ $label }}</span>
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-muted text-center py-5 mb-0">Chưa có lịch hẹn nào trong ngày hôm nay.</p>
+                @endforelse
             </div>
         </div>
     </div>

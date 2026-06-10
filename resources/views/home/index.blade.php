@@ -170,29 +170,39 @@
                     @endguest
                     @auth
                     {{-- Đã đăng nhập: form hoạt động bình thường --}}
-                    <form action="#" method="post" class="custom-form booking-form" id="bb-booking-form" role="form">
+                    <form method="post" class="custom-form booking-form" id="booking-form" role="form">
                         @csrf
+                        <input type="hidden" name="user_id" value="{{ Auth::id() }}">
+                        <input type="hidden" name="status" value="pending">
+
                         <div class="text-center mb-5">
                             <h2 class="mb-1">Book a seat</h2>
                             <p>Please fill out the form and we get back to you</p>
                         </div>
 
+                        <div id="booking-feedback" class="alert d-none" role="alert"></div>
+
                         <div class="booking-form-body">
                             <div class="row">
                                 <div class="col-lg-6 col-12">
-                                    <input type="text" name="name" id="bb-name" class="form-control" placeholder="Full name" value="{{ Auth::user()->name }}" required>
+                                    <input type="text" name="customer_name" id="bb-name" class="form-control" placeholder="Full name" value="{{ Auth::user()->name }}" readonly>
                                 </div>
 
                                 <div class="col-lg-6 col-12">
-                                    <input type="tel" class="form-control" name="phone" placeholder="Mobile 010-020-0340" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" value="{{ Auth::user()->phone ?? '' }}">
+                                    <input type="email" class="form-control" name="customer_email" placeholder="Email" value="{{ Auth::user()->email }}" readonly>
                                 </div>
                             
                                 <div class="col-lg-6 col-12">
-                                    <input class="form-control" type="time" name="time" value="18:30" />
+                                    <select class="form-select form-control" name="appointment_time" id="bb-time" required disabled>
+                                        <option selected value="">Chọn barber và ngày trước</option>
+                                    </select>
+                                    <div class="small text-muted mt-2" id="bb-time-help">
+                                        Khung giờ trống sẽ tự động cập nhật theo barber và ngày bạn chọn.
+                                    </div>
                                 </div>
 
                                 <div class="col-lg-6 col-12">
-                                    <select class="form-select form-control" name="barber_id" id="bb-barber" aria-label="Select Barber">
+                                    <select class="form-select form-control" name="barber_id" id="bb-barber" aria-label="Select Barber" required>
                                         <option selected value="">Select Barber</option>
                                         @foreach($barbers as $barber)
                                         <option value="{{ $barber->id }}">{{ $barber->name }}</option>
@@ -201,24 +211,29 @@
                                 </div>
 
                                 <div class="col-lg-6 col-12">
-                                    <select class="form-select form-control" name="service_id" id="bb-service" aria-label="Select Service">
+                                    <select class="form-select form-control" name="service_id" id="bb-service" aria-label="Select Service" required>
                                         <option selected value="">Select Service</option>
                                         @foreach($services as $service)
-                                        <option value="{{ $service->id }}">{{ $service->name }} - ${{ number_format($service->price, 2) }}</option>
+                                        <option
+                                            value="{{ $service->id }}"
+                                            data-barber-id="{{ $service->barber_id ?? '' }}"
+                                            data-duration="{{ $service->duration_minutes }}"
+                                        >
+                                            {{ $service->name }} - ${{ number_format($service->price, 2) }}
+                                        </option>
                                         @endforeach
                                     </select>
+                                    <div class="small text-muted mt-2" id="bb-service-help">
+                                        Chọn barber để xem các dịch vụ phù hợp.
+                                    </div>
                                 </div>
 
                                 <div class="col-lg-6 col-12">
-                                    <input type="date" name="date" id="bb-date" class="form-control" placeholder="Date" required>
-                                </div>
-
-                                <div class="col-lg-6 col-12">
-                                    <input type="number" name="number_of_people" id="bb-number" class="form-control" placeholder="Number of People" min="1" required>
+                                    <input type="date" name="appointment_date" id="bb-date" class="form-control" placeholder="Date" min="{{ now()->toDateString() }}" required>
                                 </div>
                             </div>
 
-                            <textarea name="message" rows="3" class="form-control" id="bb-message" placeholder="Comment (Optional)"></textarea>
+                            <textarea name="notes" rows="3" class="form-control" id="bb-message" placeholder="Comment (Optional)"></textarea>
 
                             <div class="col-lg-4 col-md-10 col-8 mx-auto">
                                 <button type="submit" class="form-control">Submit Booking</button>
@@ -378,3 +393,216 @@
     </footer>
 
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('booking-form');
+    const feedback = document.getElementById('booking-feedback');
+
+    if (!form || !feedback) {
+        return;
+    }
+
+    const submitButton = form.querySelector('button[type="submit"]');
+    const defaultButtonLabel = submitButton ? submitButton.textContent : 'Submit Booking';
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const barberSelect = document.getElementById('bb-barber');
+    const serviceSelect = document.getElementById('bb-service');
+    const dateInput = document.getElementById('bb-date');
+    const timeSelect = document.getElementById('bb-time');
+    const serviceHelp = document.getElementById('bb-service-help');
+    const timeHelp = document.getElementById('bb-time-help');
+    const serviceOptions = Array.from(serviceSelect?.querySelectorAll('option') ?? []);
+
+    const showFeedback = (type, message) => {
+        feedback.className = `alert alert-${type}`;
+        feedback.textContent = message;
+    };
+
+    const resetTimeOptions = (placeholder, disabled = true) => {
+        if (!timeSelect) {
+            return;
+        }
+
+        timeSelect.innerHTML = '';
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = placeholder;
+        option.selected = true;
+        timeSelect.appendChild(option);
+        timeSelect.disabled = disabled;
+    };
+
+    const filterServicesByBarber = () => {
+        if (!barberSelect || !serviceSelect) {
+            return;
+        }
+
+        const selectedBarberId = barberSelect.value;
+        let visibleCount = 0;
+
+        serviceOptions.forEach((option, index) => {
+            if (index === 0) {
+                option.hidden = false;
+                return;
+            }
+
+            const optionBarberId = option.dataset.barberId ?? '';
+            const matches = !selectedBarberId || !optionBarberId || optionBarberId === selectedBarberId;
+
+            option.hidden = !matches;
+
+            if (matches) {
+                visibleCount++;
+            }
+        });
+
+        if (!serviceOptions.find((option) => option.value === serviceSelect.value && !option.hidden)) {
+            serviceSelect.value = '';
+        }
+
+        if (serviceHelp) {
+            serviceHelp.textContent = selectedBarberId
+                ? (visibleCount > 0
+                    ? 'Danh sách dịch vụ đã được lọc theo barber bạn chọn.'
+                    : 'Barber này hiện chưa có dịch vụ riêng. Bạn có thể chọn dịch vụ mặc định nếu có.')
+                : 'Chọn barber để xem các dịch vụ phù hợp.';
+        }
+    };
+
+    const fetchAvailableSlots = async () => {
+        if (!barberSelect || !dateInput || !timeSelect) {
+            return;
+        }
+
+        const barberId = barberSelect.value;
+        const appointmentDate = dateInput.value;
+
+        if (!barberId || !appointmentDate) {
+            resetTimeOptions('Chọn barber và ngày trước', true);
+
+            if (timeHelp) {
+                timeHelp.textContent = 'Khung giờ trống sẽ tự động cập nhật theo barber và ngày bạn chọn.';
+            }
+
+            return;
+        }
+
+        resetTimeOptions('Đang tải khung giờ...', true);
+
+        try {
+            const response = await fetch(`/api/barbers/${barberId}/slots?date=${encodeURIComponent(appointmentDate)}`, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            const result = await response.json().catch(() => ({}));
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.message || 'Không thể lấy khung giờ trống.');
+            }
+
+            const slots = Array.isArray(result.data) ? result.data : [];
+            const isOnLeave = Boolean(result.meta?.is_on_leave);
+
+            resetTimeOptions(
+                slots.length > 0 ? 'Chọn khung giờ trống' : 'Không còn khung giờ trống',
+                slots.length === 0
+            );
+
+            slots.forEach((slot) => {
+                const option = document.createElement('option');
+                option.value = slot;
+                option.textContent = slot;
+                timeSelect.appendChild(option);
+            });
+
+            if (timeHelp) {
+                timeHelp.textContent = slots.length > 0
+                    ? 'Đã tải khung giờ trống cho barber và ngày bạn chọn.'
+                    : (isOnLeave
+                        ? 'Barber đang nghỉ phép trong ngày này. Vui lòng chọn ngày hoặc barber khác.'
+                        : 'Ngày này đã kín lịch. Vui lòng chọn ngày hoặc barber khác.');
+            }
+        } catch (error) {
+            resetTimeOptions('Không tải được khung giờ', true);
+
+            if (timeHelp) {
+                timeHelp.textContent = 'Không thể tải khung giờ trống lúc này. Vui lòng thử lại sau.';
+            }
+        }
+    };
+
+    barberSelect?.addEventListener('change', () => {
+        filterServicesByBarber();
+        fetchAvailableSlots();
+    });
+
+    dateInput?.addEventListener('change', fetchAvailableSlots);
+
+    filterServicesByBarber();
+    resetTimeOptions('Chọn barber và ngày trước', true);
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Đang gửi...';
+        }
+
+        const payload = Object.fromEntries(new FormData(form).entries());
+
+        try {
+            const response = await fetch('/api/appointments', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken ?? '',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json().catch(() => ({}));
+
+            if (response.ok && result.success) {
+                showFeedback('success', result.message || 'Đặt lịch thành công!');
+                form.reset();
+                filterServicesByBarber();
+                resetTimeOptions('Chọn barber và ngày trước', true);
+
+                if (serviceHelp) {
+                    serviceHelp.textContent = 'Chọn barber để xem các dịch vụ phù hợp.';
+                }
+
+                if (timeHelp) {
+                    timeHelp.textContent = 'Khung giờ trống sẽ tự động cập nhật theo barber và ngày bạn chọn.';
+                }
+
+                return;
+            }
+
+            const validationMessage = result.errors
+                ? Object.values(result.errors).flat().join(' ')
+                : null;
+
+            showFeedback('danger', validationMessage || result.message || 'Có lỗi xảy ra khi đặt lịch.');
+        } catch (error) {
+            showFeedback('danger', 'Không thể kết nối tới server. Vui lòng thử lại sau.');
+        } finally {
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.textContent = defaultButtonLabel;
+            }
+        }
+    });
+});
+</script>
+@endpush

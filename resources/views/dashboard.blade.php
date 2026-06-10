@@ -129,5 +129,156 @@
             </div>
         </div>
     </div>
+
+    <div class="row g-4 mt-1">
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="bi bi-bar-chart-line me-2"></i>Lịch hẹn 7 ngày gần nhất
+                </div>
+                <div class="card-body">
+                    <canvas id="appointmentsByDayChart" height="150"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="bi bi-pie-chart me-2"></i>Tỷ lệ trạng thái lịch hẹn
+                </div>
+                <div class="card-body">
+                    <canvas id="appointmentStatusChart" height="150"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-1">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-stars me-2"></i>Top 5 dịch vụ phổ biến
+                </div>
+                <div class="card-body">
+                    <canvas id="popularServicesChart" height="120"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const appointmentLabels = @json($appointmentChartLabels ?? []);
+    const appointmentData = @json($appointmentChartData ?? []);
+    const statusLabels = @json($statusChartLabels ?? []);
+    const statusData = @json($statusChartData ?? []);
+    const serviceLabels = @json($popularServiceLabels ?? []);
+    const serviceData = @json($popularServiceData ?? []);
+
+    const appointmentsByDayCanvas = document.getElementById('appointmentsByDayChart');
+    if (appointmentsByDayCanvas) {
+        new Chart(appointmentsByDayCanvas, {
+            type: 'bar',
+            data: {
+                labels: appointmentLabels,
+                datasets: [{
+                    label: 'Số lịch hẹn',
+                    data: appointmentData,
+                    backgroundColor: 'rgba(102, 126, 234, 0.75)',
+                    borderColor: 'rgba(102, 126, 234, 1)',
+                    borderWidth: 1,
+                    borderRadius: 8,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false,
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    const appointmentStatusCanvas = document.getElementById('appointmentStatusChart');
+    if (appointmentStatusCanvas) {
+        new Chart(appointmentStatusCanvas, {
+            type: 'doughnut',
+            data: {
+                labels: statusLabels,
+                datasets: [{
+                    data: statusData,
+                    backgroundColor: [
+                        'rgba(253, 203, 110, 0.85)',
+                        'rgba(9, 132, 227, 0.85)',
+                        'rgba(0, 184, 148, 0.85)',
+                        'rgba(214, 48, 49, 0.85)',
+                    ],
+                    borderWidth: 0,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                }
+            }
+        });
+    }
+
+    const popularServicesCanvas = document.getElementById('popularServicesChart');
+    if (popularServicesCanvas) {
+        new Chart(popularServicesCanvas, {
+            type: 'bar',
+            data: {
+                labels: serviceLabels,
+                datasets: [{
+                    label: 'Số lịch hẹn',
+                    data: serviceData,
+                    backgroundColor: 'rgba(233, 69, 96, 0.8)',
+                    borderColor: 'rgba(233, 69, 96, 1)',
+                    borderWidth: 1,
+                    borderRadius: 8,
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false,
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+@endpush

@@ -73,7 +73,7 @@ class ServiceController extends Controller
         // Tạo dịch vụ mới
         Service::create($validated);
 
-        return redirect()->route('services.index')
+        return redirect()->route('admin.services.index')
             ->with('success', 'Thêm dịch vụ thành công!');
     }
 
@@ -121,7 +121,7 @@ class ServiceController extends Controller
         // Cập nhật dịch vụ
         $service->update($validated);
 
-        return redirect()->route('services.index')
+        return redirect()->route('admin.services.index')
             ->with('success', 'Cập nhật dịch vụ thành công!');
     }
 
@@ -132,7 +132,7 @@ class ServiceController extends Controller
     {
         $service->delete();
 
-        return redirect()->route('services.index')
+        return redirect()->route('admin.services.index')
             ->with('success', 'Xóa dịch vụ thành công!');
     }
 }

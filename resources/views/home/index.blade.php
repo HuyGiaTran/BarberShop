@@ -9,10 +9,10 @@
             <div class="row">
                 <div class="col-lg-8 col-12">
                     <h1 class="text-white mb-lg-3 mb-4"><strong>Barber <em>Shop</em></strong></h1>
-                    <p class="text-black">Get the most professional haircut for you</p>
+                    <p class="text-black">Mang đến cho bạn mái tóc chuyên nghiệp nhất</p>
                     <br>
-                    <a class="btn custom-btn custom-border-btn custom-btn-bg-white smoothscroll me-2 mb-2" href="#section_2">About Us</a>
-                    <a class="btn custom-btn smoothscroll mb-2" href="#section_3">What we do</a>
+                    <a class="btn custom-btn custom-border-btn custom-btn-bg-white smoothscroll me-2 mb-2" href="#section_2">Về chúng tôi</a>
+                    <a class="btn custom-btn smoothscroll mb-2" href="#section_3">Dịch vụ</a>
                 </div>
             </div>
         </div>
@@ -20,9 +20,9 @@
         <div class="custom-block d-lg-flex flex-column justify-content-center align-items-center">
             <img src="{{ asset('images/vintage-chair-barbershop.jpg') }}" class="custom-block-image img-fluid" alt="">
 
-            <h4><strong class="text-white">Hurry Up! Get good haircut.</strong></h4>
+            <h4><strong class="text-white">Đừng chần chừ! Hãy làm mới bản thân.</strong></h4>
 
-            <a href="#booking-section" class="smoothscroll btn custom-btn custom-btn-italic mt-3">Book a seat</a>
+            <a href="#booking-section" class="smoothscroll btn custom-btn custom-btn-italic mt-3">Đặt lịch ngay</a>
         </div>
     </section>
 
@@ -31,13 +31,13 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-12 col-12 mx-auto">
-                    <h2 class="mb-4">Best hairdressers</h2>
+                    <h2 class="mb-4">Thợ cắt tóc hàng đầu</h2>
                     <div class="border-bottom pb-3 mb-5">
                         <p>Gentlemen's Barber Shop - Nơi mang đến cho bạn phong cách cắt tóc chuyên nghiệp nhất. Đội ngũ barber giàu kinh nghiệm của chúng tôi luôn sẵn sàng phục vụ bạn.</p>
                     </div>
                 </div>
 
-                <h6 class="mb-5">Meet Our Barbers</h6>
+                <h6 class="mb-5">Đội ngũ Barber</h6>
 
                 @forelse($barbers as $barber)
                 <div class="col-lg-5 col-12 custom-block-bg-overlay-wrap {{ $loop->odd ? 'me-lg-5' : '' }} mb-5 mb-lg-0 {{ $loop->index >= 2 ? 'mt-4 mt-lg-0' : '' }}">
@@ -73,9 +73,9 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-10 col-12 mx-auto">
-                    <h2 class="mb-3">Get 32% Discount</h2>
-                    <p>on every second week of the month</p>
-                    <strong>Promo Code: BarBerMo</strong>
+                    <h2 class="mb-3">Giảm giá ưu đãi</h2>
+                    <p>Dành cho khách hàng thân thiết vào cuối tuần</p>
+                    <strong>Mã giảm giá: BarBerVIP</strong>
                 </div>
             </div>
         </div>
@@ -86,7 +86,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-12 col-12">
-                    <h2 class="mb-5">Services</h2>
+                    <h2 class="mb-5">Dịch vụ</h2>
                 </div>
 
                 @forelse($services as $service)
@@ -96,7 +96,7 @@
 
                         <div class="services-info d-flex align-items-end">
                             <h4 class="mb-0">{{ $service->name }}</h4>
-                            <strong class="services-thumb-price">${{ number_format($service->price, 2) }}</strong>
+                            <strong class="services-thumb-price">{{ number_format($service->price, 0, ',', '.') }}đ</strong>
                         </div>
                     </div>
                 </div>
@@ -118,18 +118,18 @@
                     {{-- Chưa đăng nhập: hiển thị form nhưng disabled và có thông báo --}}
                     <div class="custom-form booking-form" id="bb-booking-form">
                         <div class="text-center mb-5">
-                            <h2 class="mb-1">Book a seat</h2>
-                            <p>Please fill out the form and we get back to you</p>
+                            <h2 class="mb-1">Đặt lịch cắt tóc</h2>
+                            <p>Vui lòng đăng nhập để tiến hành đặt lịch</p>
                         </div>
 
                         <div class="booking-form-body">
                             <div class="row">
                                 <div class="col-lg-6 col-12">
-                                    <input type="text" class="form-control" placeholder="Full name" disabled>
+                                    <input type="text" class="form-control" placeholder="Họ và tên" disabled>
                                 </div>
 
                                 <div class="col-lg-6 col-12">
-                                    <input type="tel" class="form-control" placeholder="Mobile 010-020-0340" disabled>
+                                    <input type="tel" class="form-control" placeholder="Số điện thoại" disabled>
                                 </div>
                             
                                 <div class="col-lg-6 col-12">
@@ -138,13 +138,13 @@
 
                                 <div class="col-lg-6 col-12">
                                     <select class="form-select form-control" disabled>
-                                        <option selected>Select Barber</option>
+                                        <option selected>Chọn Barber</option>
                                     </select>
                                 </div>
 
                                 <div class="col-lg-6 col-12">
                                     <select class="form-select form-control" disabled>
-                                        <option selected>Select Service</option>
+                                        <option selected>Chọn dịch vụ</option>
                                     </select>
                                 </div>
 
@@ -153,11 +153,11 @@
                                 </div>
 
                                 <div class="col-lg-6 col-12">
-                                    <input type="number" class="form-control" placeholder="Number of People" disabled>
+                                    <input type="text" class="form-control" placeholder="Số lượng khách" disabled>
                                 </div>
                             </div>
 
-                            <textarea rows="3" class="form-control" placeholder="Comment (Optional)" disabled></textarea>
+                            <textarea rows="3" class="form-control" placeholder="Ghi chú (Không bắt buộc)" disabled></textarea>
 
                             <div class="col-lg-4 col-md-10 col-8 mx-auto">
                                 <a href="{{ route('login') }}" class="form-control text-center text-decoration-none" 
@@ -176,8 +176,8 @@
                         <input type="hidden" name="status" value="pending">
 
                         <div class="text-center mb-5">
-                            <h2 class="mb-1">Book a seat</h2>
-                            <p>Please fill out the form and we get back to you</p>
+                            <h2 class="mb-1">Đặt lịch cắt tóc</h2>
+                            <p>Vui lòng điền thông tin để chúng tôi phục vụ bạn tốt nhất</p>
                         </div>
 
                         <div id="booking-feedback" class="alert d-none" role="alert"></div>
@@ -185,7 +185,7 @@
                         <div class="booking-form-body">
                             <div class="row">
                                 <div class="col-lg-6 col-12">
-                                    <input type="text" name="customer_name" id="bb-name" class="form-control" placeholder="Full name" value="{{ Auth::user()->name }}" readonly>
+                                    <input type="text" name="customer_name" id="bb-name" class="form-control" placeholder="Họ và tên" value="{{ Auth::user()->name }}" readonly>
                                 </div>
 
                                 <div class="col-lg-6 col-12">
@@ -203,7 +203,7 @@
 
                                 <div class="col-lg-6 col-12">
                                     <select class="form-select form-control" name="barber_id" id="bb-barber" aria-label="Select Barber" required>
-                                        <option selected value="">Select Barber</option>
+                                        <option selected value="">Chọn Barber</option>
                                         @foreach($barbers as $barber)
                                         <option value="{{ $barber->id }}">{{ $barber->name }}</option>
                                         @endforeach
@@ -212,14 +212,14 @@
 
                                 <div class="col-lg-6 col-12">
                                     <select class="form-select form-control" name="service_id" id="bb-service" aria-label="Select Service" required>
-                                        <option selected value="">Select Service</option>
+                                        <option selected value="">Chọn dịch vụ</option>
                                         @foreach($services as $service)
                                         <option
                                             value="{{ $service->id }}"
                                             data-barber-id="{{ $service->barber_id ?? '' }}"
                                             data-duration="{{ $service->duration_minutes }}"
                                         >
-                                            {{ $service->name }} - ${{ number_format($service->price, 2) }}
+                                            {{ $service->name }} - {{ number_format($service->price, 0, ',', '.') }}đ
                                         </option>
                                         @endforeach
                                     </select>
@@ -229,14 +229,14 @@
                                 </div>
 
                                 <div class="col-lg-6 col-12">
-                                    <input type="date" name="appointment_date" id="bb-date" class="form-control" placeholder="Date" min="{{ now()->toDateString() }}" required>
+                                    <input type="date" name="appointment_date" id="bb-date" class="form-control" placeholder="Ngày hẹn" min="{{ now()->toDateString() }}" required>
                                 </div>
                             </div>
 
-                            <textarea name="notes" rows="3" class="form-control" id="bb-message" placeholder="Comment (Optional)"></textarea>
+                            <textarea name="notes" rows="3" class="form-control" id="bb-message" placeholder="Ghi chú (Không bắt buộc)"></textarea>
 
                             <div class="col-lg-4 col-md-10 col-8 mx-auto">
-                                <button type="submit" class="form-control">Submit Booking</button>
+                                <button type="submit" class="form-control">Xác nhận đặt lịch</button>
                             </div>
                         </div>
                     </form>
@@ -253,8 +253,8 @@
                 <div class="col-lg-8 col-12">
                     <div class="price-list-thumb-wrap">
                         <div class="mb-4">
-                            <h2 class="mb-2">Price List</h2>
-                            <strong>Starting at $25</strong>
+                            <h2 class="mb-2">Bảng giá</h2>
+                            <strong>Dịch vụ chăm sóc hoàn hảo</strong>
                         </div>
 
                         @forelse($services as $service)
@@ -262,7 +262,7 @@
                             <h6 class="d-flex">
                                 {{ $service->name }}
                                 <span class="price-list-thumb-divider"></span>
-                                <strong>${{ number_format($service->price, 2) }}</strong>
+                                <strong>{{ number_format($service->price, 0, ',', '.') }}đ</strong>
                             </h6>
                         </div>
                         @empty
@@ -284,7 +284,7 @@
             <div class="container">
                 <div class="row">   
                     <div class="col-lg-8 col-12 mx-auto">
-                        <h2 class="text-center">Say hello</h2>
+                        <h2 class="text-center">Liên hệ</h2>
                     </div>
                 </div>
             </div>
@@ -294,7 +294,7 @@
             <div class="container">
                 <div class="row">
                     <div class="col-lg-6 col-12">
-                        <h5 class="mb-3"><strong>Contact</strong> Information</h5>
+                        <h5 class="mb-3"><strong>Thông tin</strong> liên hệ</h5>
 
                         <p class="text-white d-flex mb-1">
                             <a href="tel: 120-240-3600" class="site-footer-link">
@@ -331,7 +331,7 @@
                         <div class="contact-block">
                             <h6 class="mb-0">
                                 <i class="custom-icon bi-shop me-3"></i>
-                                <strong>Open Daily</strong>
+                                <strong>Mở cửa hàng ngày</strong>
                                 <span class="ms-auto">10:00 AM - 8:00 PM</span>
                             </h6>
                         </div>
@@ -350,7 +350,7 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-12 col-12">
-                    <h4 class="site-footer-title mb-4">Our Branches</h4>
+                    <h4 class="site-footer-title mb-4">Hệ thống Chi nhánh</h4>
                 </div>
 
                 <div class="col-lg-4 col-md-6 col-11">
@@ -378,8 +378,8 @@
             <div class="container">
                 <div class="row align-items-center">
                     <div class="col-lg-8 col-12 mt-4">
-                        <p class="copyright-text mb-0">Copyright © 2036 Barber Shop 
-                        - Design: <a href="https://templatemo.com" rel="nofollow" target="_blank">TemplateMo</a></p>
+                        <p class="copyright-text mb-0">Copyright © 2026 Barber Shop 
+                        - Phát triển bởi <a href="#" rel="nofollow" target="_blank">HuyGiaTran</a></p>
                     </div>
 
                     <div class="col-lg-2 col-md-3 col-3 mt-lg-4 ms-auto">
@@ -405,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const submitButton = form.querySelector('button[type="submit"]');
-    const defaultButtonLabel = submitButton ? submitButton.textContent : 'Submit Booking';
+    const defaultButtonLabel = submitButton ? submitButton.textContent : 'Xác nhận đặt lịch';
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     const barberSelect = document.getElementById('bb-barber');
     const serviceSelect = document.getElementById('bb-service');

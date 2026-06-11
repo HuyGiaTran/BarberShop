@@ -191,6 +191,12 @@
                     <span>Lịch hẹn</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.leave_requests.index') }}" class="nav-link {{ request()->routeIs('admin.leave_requests.*') ? 'active' : '' }}">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <span>Đơn xin nghỉ</span>
+                </a>
+            </li>
             <li class="nav-item mt-4">
                 <hr style="border-color: rgba(255,255,255,0.1); margin: 10px 20px;">
             </li>

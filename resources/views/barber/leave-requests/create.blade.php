@@ -557,14 +557,14 @@
                 <div class="form-section">
                     <h5 class="form-section-title"><i class="bi bi-check-circle me-2"></i>Cam kết</h5>
                     <div class="form-check">
+                        <input type="hidden" name="commitment" value="0">
                         <input
                             class="form-check-input @error('commitment') is-invalid @enderror"
                             type="checkbox"
                             id="commitment"
                             name="commitment"
                             value="1"
-                            {{ old('commitment') ? 'checked' : '' }}
-                            required>
+                            {{ old('commitment') ? 'checked' : '' }}>
                         <label class="form-check-label" for="commitment">
                             Tôi cam kết thực hiện đúng các nội dung đã nêu trong đơn này <span class="required">*</span>
                         </label>

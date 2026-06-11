@@ -184,7 +184,7 @@
                                 </div>
 
                                 <div class="col-lg-6 col-12">
-                                    <input type="tel" class="form-control" name="phone" placeholder="Mobile 010-020-0340" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" value="{{ Auth::user()->phone ?? '' }}">
+                                    <input type="tel" class="form-control" name="phone" placeholder="Số điện thoại (10-11 số)" pattern="[0-9]{10,11}" value="{{ Auth::user()->phone ?? '' }}">
                                 </div>
                             
                                 <div class="col-lg-6 col-12">

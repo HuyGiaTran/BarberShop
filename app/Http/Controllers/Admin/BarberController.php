@@ -10,7 +10,7 @@ class BarberController extends Controller
 {
     public function index()
     {
-        $barbers = Barber::all();
+        $barbers = Barber::paginate(10);
         return view('barbers.index', compact('barbers'));
     }
 

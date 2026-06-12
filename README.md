@@ -3,8 +3,8 @@
 # 💈 SIÊU PHẨM: QUẢN LÝ BARBER SHOP TỶ ĐÔ 💈
 **Hệ thống Quản lý Tiệm Cắt Tóc Thế Hệ Mới - Đột Phá Kỷ Nguyên Số**
 
-[![Laravel](https://img.shields.io/badge/Laravel_11-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](#)
-[![PHP](https://img.shields.io/badge/PHP_8.5.7-777BB4?style=for-the-badge&logo=php&logoColor=white)](#)
+[![Laravel](https://img.shields.io/badge/Laravel_13-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](#)
+[![PHP](https://img.shields.io/badge/PHP_8.3+-777BB4?style=for-the-badge&logo=php&logoColor=white)](#)
 [![MySQL](https://img.shields.io/badge/MySQL_8.0-00000F?style=for-the-badge&logo=mysql&logoColor=white)](#)
 [![Bootstrap](https://img.shields.io/badge/UI_UX-Glassmorphism-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white)](#)
 [![VNPAY](https://img.shields.io/badge/Thanh_Toán-VNPAY_Sandbox-blue?style=for-the-badge)](#)
@@ -36,7 +36,7 @@ Quên đi những phần mềm quản lý nhàm chán! **Barber Shop Tỷ Đô**
 
 ## 🛠 KIẾN TRÚC HỆ THỐNG VÀ CÔNG NGHỆ BỀ TRONG
 
-Dự án không code theo kiểu "chạy được là được", mà được thiết kế theo tiêu chuẩn của các Tập đoàn công nghệ với **Laravel 11.x**:
+Dự án không code theo kiểu "chạy được là được", mà được thiết kế theo tiêu chuẩn của các Tập đoàn công nghệ với **Laravel 13.x**:
 
 - 🏗 **Service Pattern & Repository Pattern**: Tách biệt hoàn toàn tầng Logic nghiệp vụ (Business Logic) và tầng truy xuất Dữ liệu (Data Access). Code "Sạch như OMO", dễ dàng mở rộng lên hàng triệu người dùng.
 - 👁 **Observer Pattern**: Con mắt thần giám sát mọi động thái của Lịch hẹn, Hóa đơn. Bất kỳ thay đổi trạng thái nào cũng được hệ thống ngầm ghi nhận, tự động cộng điểm, tự động hủy cọc.
@@ -92,7 +92,7 @@ php artisan migrate --seed
 ```bash
 php artisan serve
 ```
-*(Nếu XAMPP của bạn không cài sẵn PHP 8.5.7, hãy tải PHP 8.5.7 về, giải nén và gọi đường dẫn tuyệt đối, ví dụ: `C:\xampp\php-8.5.7\php-8.5.7-nts-Win32-vs17-x64\php.exe artisan serve`)*
+*(Nếu XAMPP của bạn không cài sẵn PHP 8.3+, hãy tải bản PHP mới nhất về, giải nén và gọi đường dẫn tuyệt đối, ví dụ: `C:\xampp\php-8.5.7\php-8.5.7-nts-Win32-vs17-x64\php.exe artisan serve`)*
 
 Vào `http://127.0.0.1:8000` và chiêm ngưỡng kiệt tác!
 

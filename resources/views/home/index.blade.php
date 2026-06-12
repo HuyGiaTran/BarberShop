@@ -40,7 +40,7 @@
                 <h6 class="mb-5">Đội ngũ Barber</h6>
 
                 @forelse($barbers as $barber)
-                <div class="col-lg-5 col-12 custom-block-bg-overlay-wrap {{ $loop->odd ? 'me-lg-5' : '' }} mb-5 mb-lg-0 {{ $loop->index >= 2 ? 'mt-4 mt-lg-0' : '' }}">
+                <div class="col-lg-5 col-12 custom-block-bg-overlay-wrap {{ $loop->odd ? 'me-lg-5' : '' }} mb-5 {{ $loop->index >= 2 ? 'mt-4 mt-lg-5' : '' }}">
                     <img src="{{ $barber->avatar ? asset('storage/' . $barber->avatar) : asset('images/barber/portrait-male-hairdresser-with-scissors.jpg') }}" 
                          class="custom-block-bg-overlay-image img-fluid" 
                          alt="{{ $barber->name }}">
@@ -50,10 +50,10 @@
 
                         <ul class="social-icon ms-auto">
                             <li class="social-icon-item">
-                                <a href="#" class="social-icon-link bi-facebook"></a>
+                                <a href="https://www.facebook.com/ho.quoc.huy.677227" class="social-icon-link bi-facebook" target="_blank"></a>
                             </li>
                             <li class="social-icon-item">
-                                <a href="#" class="social-icon-link bi-instagram"></a>
+                                <a href="https://www.instagram.com/vitcungkrab/" class="social-icon-link bi-instagram" target="_blank"></a>
                             </li>
                         </ul>
                     </div>
@@ -92,7 +92,17 @@
                 @forelse($services as $service)
                 <div class="col-lg-6 col-12 mb-4">
                     <div class="services-thumb">
-                        <img src="{{ asset('images/services/hairdresser-grooming-their-client.jpg') }}" class="services-image img-fluid" alt="{{ $service->name }}">
+                        @php
+                            $serviceImageMap = [
+                                'Cat toc' => 'haircut.png',
+                                'Cao mat' => 'hairdresser-grooming-client.jpg',
+                                'Goi dau' => 'hairdresser-grooming-their-client.jpg',
+                                'Combo' => 'combo.png'
+                            ];
+                            // Nếu tên không khớp, fallback về 1 ảnh mặc định
+                            $imageName = $serviceImageMap[$service->name] ?? 'hairdresser-grooming-their-client.jpg';
+                        @endphp
+                        <img src="{{ asset('images/services/' . $imageName) }}" class="services-image img-fluid" alt="{{ $service->name }}">
 
                         <div class="services-info d-flex align-items-end">
                             <h4 class="mb-0">{{ $service->name }}</h4>
@@ -231,10 +241,10 @@
                                     </select>
                                 </div>
                                 <div class="col-lg-6 col-12">
-                                    <select class="form-select form-control" name="service_id" id="bb-service" aria-label="Select Service" required>
-                                        <option selected value="">Chọn dịch vụ</option>
+                                    <select class="form-select form-control" name="service_ids[]" id="bb-service" aria-label="Select Service" multiple size="4" required>
+                                        <option disabled value="">-- Chọn 1 hoặc nhiều dịch vụ --</option>
                                         @foreach($services as $service)
-                                        <option value="{{ $service->id }}" data-barber-id="{{ $service->barber_id ?? '' }}" data-duration="{{ $service->duration_minutes }}">
+                                        <option value="{{ $service->id }}" data-barber-id="{{ $service->barber_id ?? '' }}" data-duration="{{ $service->duration_minutes }}" data-name="{{ strtolower($service->name) }}">
                                             {{ $service->name }} - {{ number_format($service->price, 0, ',', '.') }}đ
                                         </option>
                                         @endforeach
@@ -259,6 +269,73 @@
         </div>
     </section>
 
+    {{-- Loyalty Section (Customer) --}}
+    @auth
+    @if(Auth::user()->role === 'customer' && $loyaltySummary)
+    <section class="services-section section-padding section-bg" id="section_loyalty">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 col-12">
+                    <div class="card border-0 shadow-sm overflow-hidden">
+                        <div class="card-body p-4 p-lg-5">
+                            <div class="d-flex flex-column flex-lg-row justify-content-between gap-4 align-items-start">
+                                <div>
+                                    <p class="text-uppercase text-muted small fw-bold mb-2">Membership</p>
+                                    <h2 class="mb-2"><i class="bi bi-stars me-2"></i>{{ $loyaltySummary['tier_label'] }}</h2>
+                                    <p class="mb-0 text-muted">Bạn đang có <strong>{{ number_format($loyaltySummary['points']) }} điểm</strong> tích lũy.</p>
+                                </div>
+                                <div class="text-lg-end">
+                                    @if($loyaltySummary['next_tier_label'])
+                                        <div class="badge text-bg-dark px-3 py-2 mb-2">Còn {{ number_format($loyaltySummary['points_to_next_tier']) }} điểm để lên {{ $loyaltySummary['next_tier_label'] }}</div>
+                                    @else
+                                        <div class="badge text-bg-success px-3 py-2 mb-2">Bạn đang ở hạng cao nhất</div>
+                                    @endif
+                                    <div class="text-muted small">Điểm được cộng tự động khi hóa đơn hoàn tất thanh toán.</div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <div class="d-flex justify-content-between small text-muted mb-2">
+                                    <span>Tiến độ thăng hạng</span>
+                                    <span>{{ $loyaltySummary['progress_percentage'] }}%</span>
+                                </div>
+                                <div class="progress" style="height: 12px;">
+                                    <div
+                                        class="progress-bar bg-dark"
+                                        role="progressbar"
+                                        style="width: {{ $loyaltySummary['progress_percentage'] }}%;"
+                                        aria-valuenow="{{ $loyaltySummary['progress_percentage'] }}"
+                                        aria-valuemin="0"
+                                        aria-valuemax="100"
+                                    ></div>
+                                </div>
+                            </div>
+
+                            @if(!empty($loyaltySummary['recent_logs']))
+                                <div class="mt-4">
+                                    <h6 class="fw-bold mb-3">Lịch sử điểm gần đây</h6>
+                                    <div class="row g-3">
+                                        @foreach($loyaltySummary['recent_logs'] as $log)
+                                            <div class="col-lg-4 col-md-6 col-12">
+                                                <div class="border rounded-3 p-3 h-100 bg-white">
+                                                    <div class="fw-bold text-dark">+{{ number_format($log['points']) }} điểm</div>
+                                                    <div class="small text-muted mt-1">{{ $log['note'] }}</div>
+                                                    <div class="small text-muted mt-2">Số dư: {{ number_format($log['balance_after']) }} điểm</div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    @endif
+    @endauth
+
     {{-- My Schedules (Customer) --}}
     @auth
     @if(Auth::user()->role === 'customer' && $myAppointments->count() > 0)
@@ -274,7 +351,7 @@
                         <div class="card-body d-flex flex-column">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <div>
-                                    <h6 class="fw-bold mb-1">{{ $apt->service->name ?? 'N/A' }}</h6>
+                                    <h6 class="fw-bold mb-1">{{ $apt->display_service_name ?? ($apt->service->name ?? 'N/A') }}</h6>
                                     <small class="text-muted">{{ \Carbon\Carbon::parse($apt->appointment_date)->format('d/m/Y') }} - {{ $apt->appointment_time }}</small>
                                 </div>
                                 @php
@@ -283,14 +360,31 @@
                                 @endphp
                                 <span class="badge bg-{{ $bc }}">{{ $lb }}</span>
                             </div>
+                            @if(!empty($apt->is_combo_booking))
+                            <p class="small text-warning-emphasis mb-2 mt-2">
+                                <i class="bi bi-stars me-1"></i>Bao gồm: {{ $apt->booking_service_preview }}
+                            </p>
+                            @endif
                             <p class="mb-1 small"><strong>Barber:</strong> {{ $apt->barber->name ?? 'N/A' }}</p>
                             @if(str_contains($apt->notes ?? '', 'Chuyển từ'))
                             <p class="small text-success mb-2"><i class="bi bi-arrow-left-right me-1"></i>Chuyển từ barber khác</p>
                             @endif
+                            @if(($apt->is_booking_primary ?? true) && $apt->deposit_status === 'awaiting_confirmation')
+                            <p class="small text-info mb-2"><i class="bi bi-hourglass-split me-1"></i>Đã gửi yêu cầu xác nhận cọc</p>
+                            @endif
                             <div class="mt-auto d-flex gap-2">
                                 <a href="{{ route('customer.appointments.show', $apt) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i> Details</a>
-                                @if($apt->status === 'pending')
-                                <a href="{{ route('customer.appointments.deposit', $apt) }}" class="btn btn-sm btn-success"><i class="bi bi-credit-card"></i> Deposit</a>
+                                @if(($apt->is_booking_primary ?? true) && $apt->status === 'pending' && $apt->deposit_status === 'unpaid')
+                                <a href="{{ route('customer.appointments.deposit', $apt) }}" class="btn btn-sm btn-success"><i class="bi bi-qr-code-scan"></i> QR Deposit</a>
+                                @endif
+                                @if(($apt->is_booking_primary ?? true) && in_array($apt->status, ['pending', 'confirmed'], true) && $apt->deposit_status === 'unpaid')
+                                <form method="POST" action="{{ route('customer.appointments.cancel', $apt) }}" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn chắc chắn muốn hủy lịch này?')">
+                                        <i class="bi bi-x-circle"></i> Cancel
+                                    </button>
+                                </form>
                                 @endif
                             </div>
                         </div>
@@ -307,6 +401,42 @@
     </section>
     @endif
     @endauth
+
+    {{-- Testimonials Section --}}
+    @if(isset($topReviews) && $topReviews->count() > 0)
+    <section class="testimonials-section section-padding" id="section_testimonials">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 col-12 text-center mb-5">
+                    <h2>Khách hàng nói gì về chúng tôi</h2>
+                    <p>Những đánh giá chân thực nhất từ trải nghiệm dịch vụ</p>
+                </div>
+
+                @foreach($topReviews as $review)
+                <div class="col-lg-4 col-md-6 col-12 mb-4">
+                    <div class="card border-0 shadow-sm h-100 p-4" style="border-radius: 15px;">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="{{ $review->user->avatar ? asset('storage/'.$review->user->avatar) : asset('images/default-avatar.png') }}" alt="Avatar" class="rounded-circle me-3" width="50" height="50" style="object-fit: cover;">
+                            <div>
+                                <h6 class="mb-0 fw-bold">{{ $review->user->name ?? 'Khách hàng' }}</h6>
+                                <div class="text-warning small">
+                                    @for($i = 0; $i < 5; $i++)
+                                        <i class="bi bi-star-fill"></i>
+                                    @endfor
+                                </div>
+                            </div>
+                        </div>
+                        <p class="fst-italic text-muted mb-3">"{{ $review->comment }}"</p>
+                        <div class="mt-auto small text-muted border-top pt-2">
+                            <span>Phục vụ bởi: <strong>{{ $review->barber->name ?? 'Barber' }}</strong></span>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </section>
+    @endif
 
     {{-- Contact Section --}}
     <section class="contact-section" id="section_5">
@@ -326,17 +456,14 @@
                     <div class="col-lg-6 col-12">
                         <h5 class="mb-3"><strong>Thông tin</strong> liên hệ</h5>
                         <p class="text-white d-flex mb-1">
-                            <a href="tel: 120-240-3600" class="site-footer-link">(+49) 120-240-3600</a>
+                            <a href="tel:0365362495" class="site-footer-link">0365 362 495</a>
                         </p>
                         <p class="text-white d-flex">
-                            <a href="mailto:info@yourgmail.com" class="site-footer-link">hello@barber.beauty</a>
+                            <a href="mailto:gentlemenabrber@gmail.com" class="site-footer-link">gentlemenabrber@gmail.com</a>
                         </p>
                         <ul class="social-icon">
-                            <li class="social-icon-item"><a href="#" class="social-icon-link bi-facebook"></a></li>
-                            <li class="social-icon-item"><a href="#" class="social-icon-link bi-twitter"></a></li>
-                            <li class="social-icon-item"><a href="#" class="social-icon-link bi-instagram"></a></li>
-                            <li class="social-icon-item"><a href="#" class="social-icon-link bi-youtube"></a></li>
-                            <li class="social-icon-item"><a href="#" class="social-icon-link bi-whatsapp"></a></li>
+                            <li class="social-icon-item"><a href="https://www.facebook.com/ho.quoc.huy.677227" class="social-icon-link bi-facebook" target="_blank"></a></li>
+                            <li class="social-icon-item"><a href="https://www.instagram.com/vitcungkrab/" class="social-icon-link bi-instagram" target="_blank"></a></li>
                         </ul>
                     </div>
                     <div class="col-lg-5 col-12 contact-block-wrap mt-5 mt-lg-0 pt-4 pt-lg-0 mx-auto">
@@ -349,7 +476,7 @@
                         </div>
                     </div>
                     <div class="col-lg-12 col-12 mx-auto mt-5 pt-5">
-                        <iframe class="google-map" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d7702.122299518348!2d13.396786616231472!3d52.531268574169616!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47a85180d9075183%3A0xbba8c62c3dc41a7d!2sBarbabella%20Barbershop!5e1!3m2!1sen!2sth!4v1673886261201!5m2!1sen!2sth" width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                        <iframe class="google-map" src="https://maps.google.com/maps?q=10.7607258,106.6817123&hl=vi&z=15&output=embed" width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                     </div>
                 </div>
             </div>
@@ -365,19 +492,22 @@
                 </div>
                 <div class="col-lg-4 col-md-6 col-11">
                     <div class="site-footer-thumb">
-                        <strong class="mb-1">Grünberger</strong>
-                        <p>Grünberger Str. 31, 10245 Berlin, Germany</p>
+                        <strong class="mb-1">Chi nhánh 1 (Quận 5)</strong>
+                        <p>280 An Dương Vương, Chợ Quán, Hồ Chí Minh<br>
+                        <a href="https://maps.app.goo.gl/L1Va3hrCDrjmWqu2A" target="_blank" class="text-white small"><i class="bi bi-geo-alt"></i> Xem bản đồ</a></p>
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6 col-11">
                     <div class="site-footer-thumb">
-                        <strong class="mb-1">Behrenstraße</strong>
-                        <p>Behrenstraße 27, 10117 Berlin, Germany</p>
+                        <strong class="mb-1">Chi nhánh 2 (Quận Phú Nhuận)</strong>
+                        <p>222 Đ. Lê Văn Sỹ, Nhiêu Lộc, Hồ Chí Minh<br>
+                        <a href="https://maps.app.goo.gl/YHwZvMRankPsgREV6" target="_blank" class="text-white small"><i class="bi bi-geo-alt"></i> Xem bản đồ</a></p>
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6 col-11">
-                    <strong class="mb-1">Weinbergsweg</strong>
-                    <p>Weinbergsweg 23, 10119 Berlin, Germany</p>
+                    <strong class="mb-1">Chi nhánh 3 (Quận 11)</strong>
+                    <p>351A Lạc Long Quân, Phường 5, Quận 11, Hồ Chí Minh<br>
+                    <a href="https://maps.app.goo.gl/VozUQ5ZFZ2Vau4cx8" target="_blank" class="text-white small"><i class="bi bi-geo-alt"></i> Xem bản đồ</a></p>
                 </div>
             </div>
         </div>
@@ -385,7 +515,7 @@
             <div class="container">
                 <div class="row align-items-center">
                     <div class="col-lg-8 col-12 mt-4">
-                        <p class="copyright-text mb-0">Copyright © 2026 Barber Shop - Phát triển bởi <a href="#" rel="nofollow" target="_blank">HuyGiaTran</a></p>
+                        <p class="copyright-text mb-0">Copyright © 2026 Barber Shop - Phát triển bởi <a href="https://www.facebook.com/ho.quoc.huy.677227" rel="nofollow" target="_blank">HuyGiaTran</a></p>
                     </div>
                     <div class="col-lg-2 col-md-3 col-3 mt-lg-4 ms-auto">
                         <a href="#section_1" class="back-top-icon smoothscroll" title="Back Top">
@@ -436,6 +566,15 @@ document.addEventListener('DOMContentLoaded', () => {
         timeSelect.disabled = disabled;
     };
 
+    const getSelectedTotalDuration = () => {
+        if (!serviceSelect) return 30;
+        const total = Array.from(serviceSelect.selectedOptions).reduce((sum, option) => {
+            return sum + Number(option.dataset.duration || 0);
+        }, 0);
+
+        return total > 0 ? total : 30;
+    };
+
     const filterServicesByBarber = () => {
         if (!barberSelect || !serviceSelect) return;
         const selectedBarberId = barberSelect.value;
@@ -446,8 +585,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const matches = !selectedBarberId || !optionBarberId || optionBarberId === selectedBarberId;
             option.hidden = !matches;
             if (matches) visibleCount++;
+            else option.selected = false;
         });
-        if (!serviceOptions.find((option) => option.value === serviceSelect.value && !option.hidden)) {
+        const selectedVals = Array.from(serviceSelect.selectedOptions).map(o => o.value);
+        if (selectedVals.length === 0) {
             serviceSelect.value = '';
         }
         if (serviceHelp) {
@@ -468,13 +609,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         resetTimeOptions('Đang tải khung giờ...', true);
         try {
-            const response = await fetch(`/api/barbers/${barberId}/slots?date=${encodeURIComponent(appointmentDate)}`, {
+            const durationMinutes = getSelectedTotalDuration();
+            const query = new URLSearchParams({
+                date: appointmentDate,
+                duration_minutes: String(durationMinutes),
+            });
+            const response = await fetch(`/api/barbers/${barberId}/slots?${query.toString()}`, {
                 method: 'GET', credentials: 'same-origin',
                 headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             });
             const result = await response.json().catch(() => ({}));
             if (!response.ok || !result.success) throw new Error(result.message || 'Không thể lấy khung giờ trống.');
             const slots = Array.isArray(result.data) ? result.data : [];
+            const availabilityReason = result.meta?.availability_reason;
             resetTimeOptions(slots.length > 0 ? 'Chọn khung giờ trống' : 'Không còn khung giờ trống', slots.length === 0);
             slots.forEach((slot) => {
                 const option = document.createElement('option');
@@ -482,9 +629,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 timeSelect.appendChild(option);
             });
             if (timeHelp) {
-                timeHelp.textContent = slots.length > 0
-                    ? 'Đã tải khung giờ trống cho barber và ngày bạn chọn.'
-                    : 'Ngày này đã kín lịch. Vui lòng chọn ngày hoặc barber khác.';
+                if (slots.length > 0) {
+                    timeHelp.textContent = 'Đã tải khung giờ trống phù hợp với barber, ngày và tổng thời lượng dịch vụ bạn chọn.';
+                } else {
+                    const reasonMessages = {
+                        barber_inactive: 'Barber này hiện đang ngưng nhận khách.',
+                        barber_busy: 'Barber này đang bận và tạm thời không nhận lịch mới.',
+                        barber_off: 'Barber này hiện không làm việc.',
+                        barber_on_leave: 'Barber đang nghỉ phép trong ngày bạn chọn.',
+                        no_schedule: 'Barber chưa mở lịch làm việc cho ngày này.',
+                        blocked_schedule: 'Barber đã khóa lịch làm việc trong ngày này.',
+                    };
+
+                    timeHelp.textContent = reasonMessages[availabilityReason]
+                        ?? 'Ngày này đã kín lịch hoặc không còn đủ thời lượng trống. Vui lòng chọn ngày hoặc barber khác.';
+                }
             }
         } catch (error) {
             resetTimeOptions('Không tải được khung giờ', true);
@@ -492,7 +651,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const handleServiceComboLogic = () => {
+        if (!serviceSelect) return;
+        const selectedOptions = Array.from(serviceSelect.selectedOptions);
+        const hasCombo = selectedOptions.some(opt => (opt.dataset.name || '').includes('combo'));
+        
+        serviceOptions.forEach((opt, idx) => {
+            if (idx === 0) return;
+            if (hasCombo) {
+                if (!(opt.dataset.name || '').includes('combo')) {
+                    opt.disabled = true;
+                    opt.selected = false;
+                }
+            } else {
+                opt.disabled = false;
+            }
+        });
+    };
+
     barberSelect?.addEventListener('change', () => { filterServicesByBarber(); fetchAvailableSlots(); });
+    serviceSelect?.addEventListener('change', () => {
+        handleServiceComboLogic();
+        fetchAvailableSlots();
+    });
     dateInput?.addEventListener('change', fetchAvailableSlots);
     filterServicesByBarber();
     resetTimeOptions('Chọn barber và ngày trước', true);
@@ -500,7 +681,10 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         if (submitButton) { submitButton.disabled = true; submitButton.textContent = 'Đang gửi...'; }
-        const payload = Object.fromEntries(new FormData(form).entries());
+        const formData = new FormData(form);
+        const payload = Object.fromEntries(formData.entries());
+        payload.service_ids = formData.getAll('service_ids[]');
+        delete payload['service_ids[]'];
         try {
             const response = await fetch('/api/appointments', {
                 method: 'POST', credentials: 'same-origin',

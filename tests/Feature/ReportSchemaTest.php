@@ -6,7 +6,9 @@ use App\Models\Appointment;
 use App\Models\Barber;
 use App\Models\Invoice;
 use App\Models\LeaveRequest;
+use App\Models\LoyaltyPointLog;
 use App\Models\LoyaltyProgram;
+use App\Models\Payment;
 use App\Models\Payroll;
 use App\Models\Review;
 use App\Models\Service;
@@ -25,7 +27,9 @@ class ReportSchemaTest extends TestCase
             'reviews',
             'invoices',
             'loyalty_programs',
+            'loyalty_point_logs',
             'leave_requests',
+            'payments',
             'payrolls',
         ] as $table) {
             $this->assertTrue(Schema::hasTable($table), "Failed asserting that table [{$table}] exists.");
@@ -91,14 +95,28 @@ class ReportSchemaTest extends TestCase
             'tier' => 'silver',
         ]);
 
+        $loyaltyLog = LoyaltyPointLog::create([
+            'user_id' => $customer->id,
+            'loyalty_program_id' => $loyaltyProgram->id,
+            'invoice_id' => $invoice->id,
+            'source_type' => 'invoice_paid',
+            'source_id' => $invoice->id,
+            'points' => 120,
+            'balance_after' => 120,
+            'note' => 'Schema loyalty log',
+        ]);
+
         $leaveRequest = LeaveRequest::create([
             'barber_id' => $barber->id,
             'recipient' => 'Manager',
+            'applicant_name' => $barber->name,
             'start_date' => now()->addWeek()->toDateString(),
             'end_date' => now()->addWeek()->addDay()->toDateString(),
+            'start_time' => now()->addWeek()->setTime(8, 0),
+            'end_time' => now()->addWeek()->addDay()->setTime(18, 0),
             'reason' => 'Family event',
             'handover_person' => 'Barber B',
-            'commitment' => 'Handed over schedule',
+            'commitment' => true,
             'status' => 'pending',
         ]);
 
@@ -112,6 +130,20 @@ class ReportSchemaTest extends TestCase
             'status' => 'draft',
         ]);
 
+        $payment = Payment::create([
+            'user_id' => $customer->id,
+            'appointment_id' => $appointment->id,
+            'invoice_id' => $invoice->id,
+            'booking_reference' => 'BKG-SCHEMA-001',
+            'payment_type' => 'invoice',
+            'gateway' => 'vnpay',
+            'amount' => 150000,
+            'status' => 'paid',
+            'gateway_txn_ref' => 'SCH'.now()->format('YmdHis').'ABC123',
+            'gateway_transaction_no' => 'TXN-SCHEMA-001',
+            'paid_at' => now(),
+        ]);
+
         $this->assertTrue($review->user->is($customer));
         $this->assertTrue($review->barber->is($barber));
         $this->assertTrue($review->appointment->is($appointment));
@@ -120,10 +152,15 @@ class ReportSchemaTest extends TestCase
         $this->assertTrue($invoice->appointment->is($appointment));
 
         $this->assertTrue($loyaltyProgram->user->is($customer));
+        $this->assertTrue($loyaltyLog->user->is($customer));
+        $this->assertTrue($loyaltyLog->loyaltyProgram->is($loyaltyProgram));
+        $this->assertTrue($payment->user->is($customer));
+        $this->assertTrue($payment->invoice->is($invoice));
         $this->assertTrue($leaveRequest->barber->is($barber));
         $this->assertTrue($payroll->barber->is($barber));
 
         $this->assertCount(1, $customer->reviews);
+        $this->assertCount(1, $customer->payments);
         $this->assertCount(1, $barber->leaveRequests);
         $this->assertTrue($appointment->invoice->is($invoice));
     }

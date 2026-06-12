@@ -3,12 +3,83 @@
 namespace App\Services;
 
 use App\Models\Appointment;
+use App\Models\Barber;
 use App\Models\BarberSchedule;
 use App\Models\LeaveRequest;
 use Carbon\Carbon;
 
 class AppointmentService
 {
+    public function getBookingAvailability(int $barberId, string $appointmentDate): array
+    {
+        $barber = Barber::find($barberId);
+
+        if (! $barber) {
+            return [
+                'bookable' => false,
+                'reason' => 'barber_not_found',
+                'barber' => null,
+                'schedule' => null,
+            ];
+        }
+
+        if (! $barber->is_active) {
+            return [
+                'bookable' => false,
+                'reason' => 'barber_inactive',
+                'barber' => $barber,
+                'schedule' => null,
+            ];
+        }
+
+        $workingStatus = (string) ($barber->working_status ?? 'active');
+
+        if ($workingStatus !== 'active') {
+            return [
+                'bookable' => false,
+                'reason' => "barber_{$workingStatus}",
+                'barber' => $barber,
+                'schedule' => null,
+            ];
+        }
+
+        if ($this->isBarberOnApprovedLeave($barberId, $appointmentDate)) {
+            return [
+                'bookable' => false,
+                'reason' => 'barber_on_leave',
+                'barber' => $barber,
+                'schedule' => null,
+            ];
+        }
+
+        $schedule = $this->resolveScheduleForDate($barberId, $appointmentDate);
+
+        if (! $schedule) {
+            return [
+                'bookable' => false,
+                'reason' => 'no_schedule',
+                'barber' => $barber,
+                'schedule' => null,
+            ];
+        }
+
+        if ($schedule->is_off || ! $schedule->is_available) {
+            return [
+                'bookable' => false,
+                'reason' => 'blocked_schedule',
+                'barber' => $barber,
+                'schedule' => $schedule,
+            ];
+        }
+
+        return [
+            'bookable' => true,
+            'reason' => null,
+            'barber' => $barber,
+            'schedule' => $schedule,
+        ];
+    }
+
     public function isBarberOnApprovedLeave(int $barberId, string $appointmentDate): bool
     {
         return LeaveRequest::where('barber_id', $barberId)
@@ -28,44 +99,23 @@ class AppointmentService
         // Nếu không truyền thông tin, dùng lịch mặc định (cho các chức năng cũ nếu có)
         $startHour = 8;
         $startMin = 0;
-        $endHour = 19;
-        $endMin = 30;
+        $endHour = 18;
+        $endMin = 0;
 
         if ($barberId && $appointmentDate) {
-            $date = Carbon::parse($appointmentDate);
-            $dayOfWeek = $date->dayOfWeek; // 0 (Sunday) -> 6 (Saturday)
+            $availability = $this->getBookingAvailability($barberId, $appointmentDate);
 
-            $schedule = BarberSchedule::where('barber_id', $barberId)
-                ->where('day_of_week', $dayOfWeek)
-                ->first();
-
-            if ($schedule) {
-                // Kiểm tra schedule có bị block không (nghỉ phép, bận)
-                if ($schedule->is_off || !$schedule->is_available) {
-                    return []; // Nghỉ làm hoặc bị block
-                }
-
-                $start = Carbon::parse($schedule->start_time);
-                $end = Carbon::parse($schedule->end_time);
-                
-                $startHour = $start->hour;
-                $startMin = $start->minute;
-                $endHour = $end->hour;
-                $endMin = $end->minute;
+            if (! $availability['bookable'] || ! $availability['schedule']) {
+                return [];
             }
-            
-            // Kiểm tra nếu có schedule bị block theo specific_date cho ngày này
-            $blockedSchedules = BarberSchedule::where('barber_id', $barberId)
-                ->where('specific_date', $date->format('Y-m-d'))
-                ->where(function ($q) {
-                    $q->where('is_off', true)
-                      ->orWhere('is_available', false);
-                })
-                ->get();
-                
-            if ($blockedSchedules->isNotEmpty()) {
-                return []; // Có schedule bị block trong ngày này
-            }
+
+            $start = Carbon::parse($availability['schedule']->start_time);
+            $end = Carbon::parse($availability['schedule']->end_time);
+
+            $startHour = $start->hour;
+            $startMin = $start->minute;
+            $endHour = $end->hour;
+            $endMin = $end->minute;
         }
 
         $cursor = Carbon::createFromTime($startHour, $startMin);
@@ -154,22 +204,87 @@ class AppointmentService
 
     public function availableSlotsForBarber(int $barberId, string $appointmentDate): array
     {
+        return $this->availableSlotsForDuration($barberId, $appointmentDate);
+    }
+
+    public function availableSlotsForDuration(
+        int $barberId,
+        string $appointmentDate,
+        int $durationMinutes = 30,
+        ?int $ignoreAppointmentId = null
+    ): array {
         $allSlots = $this->allSlots($barberId, $appointmentDate);
-        
+
         if (empty($allSlots)) {
-            return []; // Ngày nghỉ của thợ
+            return [];
         }
 
-        return array_values(array_diff(
-            $allSlots,
-            $this->unavailableSlotsForBarber($barberId, $appointmentDate)
-        ));
+        $availability = $this->getBookingAvailability($barberId, $appointmentDate);
+
+        if (! $availability['bookable'] || ! $availability['schedule']) {
+            return [];
+        }
+
+        $appointments = Appointment::with('service:id,duration_minutes')
+            ->where('barber_id', $barberId)
+            ->whereDate('appointment_date', $appointmentDate)
+            ->where('status', '!=', 'cancelled')
+            ->when($ignoreAppointmentId, function ($query) use ($ignoreAppointmentId) {
+                $query->where('id', '!=', $ignoreAppointmentId);
+            })
+            ->get();
+
+        $duration = max($durationMinutes, 1);
+
+        return array_values(array_filter($allSlots, function (string $slot) use ($availability, $appointments, $duration): bool {
+            if (! $this->fitsWithinSchedule($availability['schedule'], $slot, $duration)) {
+                return false;
+            }
+
+            $newStart = Carbon::createFromFormat('H:i:s', $this->normalizeTimeValue($slot));
+            $newEnd = (clone $newStart)->addMinutes($duration);
+
+            return ! $appointments->contains(function (Appointment $appointment) use ($newStart, $newEnd): bool {
+                $existingStart = Carbon::createFromFormat(
+                    'H:i:s',
+                    $this->normalizeTimeValue((string) $appointment->getRawOriginal('appointment_time'))
+                );
+                $existingDuration = max((int) ($appointment->service?->duration_minutes ?? 30), 1);
+                $existingEnd = (clone $existingStart)->addMinutes($existingDuration);
+
+                return $this->timeRangesOverlap($newStart, $newEnd, $existingStart, $existingEnd);
+            });
+        }));
     }
 
     private function normalizeTimeValue(string $time): string
     {
         $normalizedTime = trim($time);
         return strlen($normalizedTime) === 5 ? "{$normalizedTime}:00" : $normalizedTime;
+    }
+
+    private function resolveScheduleForDate(int $barberId, string $appointmentDate): ?BarberSchedule
+    {
+        $date = Carbon::parse($appointmentDate);
+        $specificDate = $date->format('Y-m-d');
+
+        return BarberSchedule::where('barber_id', $barberId)
+            ->where('specific_date', $specificDate)
+            ->first()
+            ?? BarberSchedule::where('barber_id', $barberId)
+                ->whereNull('specific_date')
+                ->where('day_of_week', $date->dayOfWeek)
+                ->first();
+    }
+
+    private function fitsWithinSchedule(BarberSchedule $schedule, string $appointmentTime, int $durationMinutes): bool
+    {
+        $start = Carbon::createFromFormat('H:i:s', $this->normalizeTimeValue($appointmentTime));
+        $end = (clone $start)->addMinutes(max($durationMinutes, 1));
+        $scheduleStart = Carbon::createFromFormat('H:i:s', $this->normalizeTimeValue((string) $schedule->start_time));
+        $scheduleEnd = Carbon::createFromFormat('H:i:s', $this->normalizeTimeValue((string) $schedule->end_time));
+
+        return $start >= $scheduleStart && $end <= $scheduleEnd;
     }
 
     private function timeRangesOverlap(

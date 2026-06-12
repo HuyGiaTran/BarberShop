@@ -4,9 +4,11 @@ namespace Tests\Feature;
 
 use App\Models\Appointment;
 use App\Models\Barber;
+use App\Models\BarberSchedule;
 use App\Models\LeaveRequest;
 use App\Models\Service;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -24,7 +26,7 @@ class AppointmentOverlapProtectionTest extends TestCase
         $response = $this->postJson('/api/appointments', [
             'user_id' => $customer->id,
             'barber_id' => $barber->id,
-            'service_id' => $shortService->id,
+            'service_ids' => [$shortService->id],
             'appointment_date' => $targetDate,
             'appointment_time' => '10:30',
             'status' => 'pending',
@@ -69,8 +71,11 @@ class AppointmentOverlapProtectionTest extends TestCase
         LeaveRequest::create([
             'barber_id' => $barber->id,
             'recipient' => 'Manager',
+            'applicant_name' => $barber->name,
             'start_date' => $targetDate,
             'end_date' => $targetDate,
+            'start_time' => Carbon::parse($targetDate.' 08:00'),
+            'end_time' => Carbon::parse($targetDate.' 18:00'),
             'reason' => 'Nghi phep',
             'status' => 'approved',
         ]);
@@ -80,7 +85,7 @@ class AppointmentOverlapProtectionTest extends TestCase
         $response = $this->postJson('/api/appointments', [
             'user_id' => $customer->id,
             'barber_id' => $barber->id,
-            'service_id' => $shortService->id,
+            'service_ids' => [$shortService->id],
             'appointment_date' => $targetDate,
             'appointment_time' => '14:00',
             'status' => 'pending',
@@ -97,8 +102,11 @@ class AppointmentOverlapProtectionTest extends TestCase
         LeaveRequest::create([
             'barber_id' => $barber->id,
             'recipient' => 'Manager',
+            'applicant_name' => $barber->name,
             'start_date' => $targetDate,
             'end_date' => $targetDate,
+            'start_time' => Carbon::parse($targetDate.' 08:00'),
+            'end_time' => Carbon::parse($targetDate.' 18:00'),
             'reason' => 'Nghi phep',
             'status' => 'approved',
         ]);
@@ -161,6 +169,7 @@ class AppointmentOverlapProtectionTest extends TestCase
         ]);
 
         $targetDate = now()->addDay()->toDateString();
+        $this->createScheduleForDate($barber->id, $targetDate);
 
         Appointment::create([
             'user_id' => $customer->id,
@@ -173,5 +182,18 @@ class AppointmentOverlapProtectionTest extends TestCase
         ]);
 
         return [$customer, $barber, $longService, $shortService, $targetDate];
+    }
+
+    private function createScheduleForDate(int $barberId, string $date, string $startTime = '08:00', string $endTime = '18:00'): void
+    {
+        BarberSchedule::create([
+            'barber_id' => $barberId,
+            'day_of_week' => Carbon::parse($date)->dayOfWeek,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'is_off' => false,
+            'is_available' => true,
+            'specific_date' => null,
+        ]);
     }
 }

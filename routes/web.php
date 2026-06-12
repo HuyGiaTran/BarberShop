@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AppointmentController;
 use App\Http\Controllers\Admin\BarberController;
 use App\Http\Controllers\Admin\InvoiceController;
+use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\PayrollController;
 use App\Http\Controllers\Admin\ReviewController;
@@ -33,6 +34,7 @@ Route::middleware(['auth'])->prefix('/my')->name('customer.')->group(function ()
     Route::get('/appointments/{appointment}', [App\Http\Controllers\Customer\AppointmentController::class, 'show'])->name('appointments.show');
     Route::get('/appointments/{appointment}/deposit', [App\Http\Controllers\Customer\AppointmentController::class, 'deposit'])->name('appointments.deposit');
     Route::post('/appointments/{appointment}/deposit', [App\Http\Controllers\Customer\AppointmentController::class, 'processDeposit'])->name('appointments.processDeposit');
+    Route::delete('/appointments/{appointment}', [App\Http\Controllers\Customer\AppointmentController::class, 'cancel'])->name('appointments.cancel');
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -81,6 +83,12 @@ Route::middleware(['auth', 'admin'])->prefix('/admin')->name('admin.')->group(fu
     Route::prefix('/invoices')->name('invoices.')->group(function () {
         Route::get('/', [InvoiceController::class, 'index'])->name('index');
         Route::patch('/{invoice}/mark-cash-paid', [InvoiceController::class, 'markCashPaid'])->name('markCashPaid');
+    });
+
+    Route::prefix('/payments')->name('payments.')->group(function () {
+        Route::get('/', [AdminPaymentController::class, 'index'])->name('index');
+        Route::patch('/{payment}/confirm-deposit', [AdminPaymentController::class, 'confirmDeposit'])->name('confirmDeposit');
+        Route::patch('/{payment}/reject-deposit', [AdminPaymentController::class, 'rejectDeposit'])->name('rejectDeposit');
     });
 
     Route::prefix('/reviews')->name('reviews.')->group(function () {

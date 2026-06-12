@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\AppointmentService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class AppointmentController extends Controller
 {
@@ -101,7 +102,13 @@ class AppointmentController extends Controller
             ]);
         }
 
-        $appointment = Appointment::create($validated);
+        $appointment = Appointment::create(array_merge($validated, [
+            'booking_reference' => 'BKG-'.now()->format('YmdHis').'-'.Str::upper(Str::random(6)),
+            'booking_sequence' => 1,
+            'is_booking_primary' => true,
+            'deposit_amount' => 50000,
+            'deposit_status' => 'unpaid',
+        ]));
 
         $appointment->load(['user', 'barber', 'service']);
         $appointment->user->notify(new \App\Notifications\AppointmentBooked($appointment));

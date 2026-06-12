@@ -34,7 +34,9 @@ class ReviewApiController extends Controller
     {
         $validated = $request->validate([
             'appointment_id' => 'required|exists:appointments,id',
-            'rating' => 'required|integer|min:1|max:5',
+            'space_rating' => 'required|integer|min:1|max:5',
+            'staff_rating' => 'required|integer|min:1|max:5',
+            'service_rating' => 'required|integer|min:1|max:5',
             'comment' => 'nullable|string|max:1000',
         ]);
 
@@ -65,17 +67,24 @@ class ReviewApiController extends Controller
             ], 400);
         }
 
+        // Tự động gán rating tổng bằng điểm nhân viên (theo yêu cầu)
+        $overallRating = $validated['staff_rating'];
+
         $review = Review::create([
             'user_id' => $request->user()->id,
             'barber_id' => $appointment->barber_id,
             'appointment_id' => $appointment->id,
-            'rating' => $validated['rating'],
+            'rating' => $overallRating,
+            'space_rating' => $validated['space_rating'],
+            'staff_rating' => $validated['staff_rating'],
+            'service_rating' => $validated['service_rating'],
             'comment' => $validated['comment'] ?? '',
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Đánh giá thành công.',
+            'message' => 'Đánh giá thành công! Mã giảm giá 5.000đ của bạn là: REVIEW5K',
+            'promo_code' => 'REVIEW5K',
             'data' => $review,
         ], 201);
     }

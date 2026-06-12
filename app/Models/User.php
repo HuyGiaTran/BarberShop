@@ -66,8 +66,18 @@ class User extends Authenticatable
         return $this->hasMany(Invoice::class);
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
     public function loyaltyProgram(): HasOne
     {
         return $this->hasOne(LoyaltyProgram::class);
+    }
+
+    public function loyaltyPointLogs(): HasMany
+    {
+        return $this->hasMany(LoyaltyPointLog::class);
     }
 }

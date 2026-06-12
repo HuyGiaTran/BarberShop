@@ -12,6 +12,9 @@ class Review extends Model
         'barber_id',
         'appointment_id',
         'rating',
+        'space_rating',
+        'staff_rating',
+        'service_rating',
         'comment',
     ];
 

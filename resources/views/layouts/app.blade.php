@@ -204,6 +204,12 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="{{ route('admin.payments.index') }}" class="nav-link {{ request()->routeIs('admin.payments.*') ? 'active' : '' }} d-block w-100">
+                    <i class="bi bi-qr-code-scan"></i>
+                    <span>Xác nhận cọc</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="{{ route('admin.reviews.index') }}" class="nav-link {{ request()->routeIs('admin.reviews.*') ? 'active' : '' }} d-block w-100">
                     <i class="bi bi-star"></i>
                     <span>Quản lý Đánh giá</span>

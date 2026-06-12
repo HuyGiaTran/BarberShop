@@ -4,12 +4,18 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
+use App\Services\PaymentFlowService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class InvoiceController extends Controller
 {
+    public function __construct(
+        private readonly PaymentFlowService $paymentFlowService
+    ) {
+    }
+
     public function index(Request $request): View
     {
         $query = Invoice::with(['user', 'appointment.barber', 'appointment.service']);
@@ -68,11 +74,7 @@ class InvoiceController extends Controller
             return back()->with('error', 'Hoa don nay da duoc xac nhan thanh toan qua VNPAY.');
         }
 
-        $invoice->update([
-            'payment_method' => 'cash',
-            'payment_status' => 'paid',
-            'transaction_id' => null,
-        ]);
+        $this->paymentFlowService->markInvoiceAsPaid($invoice, 'cash');
 
         return back()->with('success', 'Da cap nhat hoa don sang trang thai da thu tien mat.');
     }

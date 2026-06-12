@@ -68,7 +68,10 @@ class BarberDashboardTest extends TestCase
         $response = $this->actingAs($barberUser)->get(route('barber.dashboard'));
 
         $response->assertOk();
-        $response->assertSeeText('2 lịch hôm nay, 1 đã hoàn thành');
+        $response->assertSeeText('2');
+        $response->assertSeeText('Lịch hẹn hôm nay');
+        $response->assertSeeText('1');
+        $response->assertSeeText('Hoàn thành hôm nay');
         $response->assertSeeText('Nguyen Van A');
         $response->assertSeeText('Tran Thi B');
         $response->assertSeeText('Cat toc nam');
@@ -91,12 +94,14 @@ class BarberDashboardTest extends TestCase
         $response = $this
             ->actingAs($barberUser)
             ->from(route('barber.dashboard'))
-            ->post(route('barber.toggleStatus'));
+            ->patch(route('barber.status.update'), [
+                'working_status' => 'busy',
+            ]);
 
         $response->assertRedirect(route('barber.dashboard'));
 
         $barber->refresh();
 
-        $this->assertFalse($barber->is_active);
+        $this->assertSame('busy', $barber->working_status);
     }
 }

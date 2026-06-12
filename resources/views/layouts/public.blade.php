@@ -195,6 +195,7 @@
         </div>
 
         <!-- Chatbot UI -->
+        @auth
         <div id="chatbot-container">
             <button id="chatbot-button" title="Chat với chúng tôi">
                 <i class="bi bi-chat-dots-fill"></i>
@@ -205,30 +206,47 @@
                     <i class="bi bi-x" id="chatbot-close"></i>
                 </div>
                 <div id="chatbot-messages">
-                    <div class="chat-msg bot">Xin chào! Tôi là trợ lý AI của Barber Shop. Tôi có thể giúp gì cho bạn?</div>
+                    <div class="chat-msg bot">Xin chào {{ Auth::user()->name }}! Tôi là trợ lý AI của Barber Shop. Tôi có thể giúp bạn đặt lịch hoặc tư vấn kiểu tóc (bạn có thể gửi ảnh cho tôi).</div>
                 </div>
-                <div id="chatbot-input-area">
-                    <input type="text" id="chatbot-input" placeholder="Nhập câu hỏi..." autocomplete="off">
-                    <button id="chatbot-send"><i class="bi bi-send-fill"></i></button>
+                <form id="chatbot-input-area">
+                    <label for="chatbot-image" class="btn btn-sm btn-light m-0" style="border: 1px solid #ddd; border-radius: 20px 0 0 20px; padding: 8px 12px; cursor: pointer; color: #666;">
+                        <i class="bi bi-camera-fill"></i>
+                    </label>
+                    <input type="file" id="chatbot-image" accept="image/*" style="display: none;">
+                    
+                    <input type="text" id="chatbot-input" placeholder="Nhập câu hỏi..." autocomplete="off" style="border-radius: 0; border-left: none; border-right: none;">
+                    
+                    <button type="submit" id="chatbot-send" style="border: 1px solid #ddd; border-radius: 0 20px 20px 0; background: #fff; padding: 8px 12px;"><i class="bi bi-send-fill"></i></button>
+                </form>
+                <div id="chatbot-preview" style="display: none; padding: 5px 10px; background: #f1f1f1; font-size: 12px; border-top: 1px solid #ddd;">
+                    <span id="chatbot-preview-name"></span>
+                    <i class="bi bi-x-circle text-danger ms-2" id="chatbot-preview-remove" style="cursor: pointer;"></i>
                 </div>
             </div>
         </div>
 
-        <!-- JAVASCRIPT FILES -->
-        <script src="{{ asset('js/jquery.min.js') }}"></script>
-        <script src="{{ asset('js/bootstrap.min.js') }}"></script>
-        <script src="{{ asset('js/click-scroll.js') }}"></script>
-        <script src="{{ asset('js/custom.js') }}"></script>
-        
-        <!-- Chatbot Script -->
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 const chatBtn = document.getElementById('chatbot-button');
                 const chatWin = document.getElementById('chatbot-window');
                 const closeBtn = document.getElementById('chatbot-close');
                 const chatInput = document.getElementById('chatbot-input');
+                const chatImage = document.getElementById('chatbot-image');
                 const sendBtn = document.getElementById('chatbot-send');
                 const msgsArea = document.getElementById('chatbot-messages');
+                const form = document.getElementById('chatbot-input-area');
+                const previewDiv = document.getElementById('chatbot-preview');
+                const previewName = document.getElementById('chatbot-preview-name');
+                const previewRemove = document.getElementById('chatbot-preview-remove');
+
+                let chatHistory = [];
+
+                // Auto pop-up after 2 seconds
+                setTimeout(() => {
+                    if (chatWin.style.display !== 'flex') {
+                        chatWin.style.display = 'flex';
+                    }
+                }, 2000);
 
                 chatBtn.addEventListener('click', () => {
                     chatWin.style.display = chatWin.style.display === 'flex' ? 'none' : 'flex';
@@ -238,20 +256,62 @@
                     chatWin.style.display = 'none';
                 });
 
-                const appendMessage = (text, sender) => {
+                chatImage.addEventListener('change', function() {
+                    if (this.files && this.files[0]) {
+                        previewName.textContent = 'Đã đính kèm: ' + this.files[0].name;
+                        previewDiv.style.display = 'block';
+                    }
+                });
+
+                previewRemove.addEventListener('click', function() {
+                    chatImage.value = '';
+                    previewDiv.style.display = 'none';
+                });
+
+                const appendMessage = (text, sender, isImage = false) => {
                     const msgDiv = document.createElement('div');
                     msgDiv.className = `chat-msg ${sender}`;
-                    msgDiv.textContent = text;
+                    
+                    if (isImage) {
+                        msgDiv.innerHTML = text; // Expecting HTML like <img src="...">
+                    } else {
+                        // Very simple markdown to HTML (just line breaks and bold)
+                        const formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                        msgDiv.innerHTML = formattedText;
+                    }
+                    
                     msgsArea.appendChild(msgDiv);
                     msgsArea.scrollTop = msgsArea.scrollHeight;
                 };
 
-                const sendMessage = async () => {
+                const sendMessage = async (e) => {
+                    e.preventDefault();
+                    
                     const text = chatInput.value.trim();
-                    if (!text) return;
+                    const file = chatImage.files[0];
+                    
+                    if (!text && !file) return;
 
-                    appendMessage(text, 'user');
+                    // Display user message
+                    if (text) appendMessage(text, 'user');
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            appendMessage(`<img src="${e.target.result}" style="max-width: 100%; border-radius: 8px;">`, 'user', true);
+                        }
+                        reader.readAsDataURL(file);
+                    }
+
+                    // Prepare FormData
+                    const formData = new FormData();
+                    if (text) formData.append('message', text);
+                    if (file) formData.append('image', file);
+                    if (chatHistory.length > 0) formData.append('history', JSON.stringify(chatHistory));
+
+                    // Reset inputs
                     chatInput.value = '';
+                    chatImage.value = '';
+                    previewDiv.style.display = 'none';
                     chatInput.disabled = true;
                     sendBtn.disabled = true;
 
@@ -260,7 +320,7 @@
                     const loadingDiv = document.createElement('div');
                     loadingDiv.className = 'chat-msg bot';
                     loadingDiv.id = loadingId;
-                    loadingDiv.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang trả lời...';
+                    loadingDiv.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xử lý...';
                     msgsArea.appendChild(loadingDiv);
                     msgsArea.scrollTop = msgsArea.scrollHeight;
 
@@ -268,11 +328,10 @@
                         const response = await fetch('/api/chatbot/ask', {
                             method: 'POST',
                             headers: {
-                                'Content-Type': 'application/json',
                                 'Accept': 'application/json',
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                             },
-                            body: JSON.stringify({ message: text })
+                            body: formData
                         });
 
                         const data = await response.json();
@@ -280,8 +339,22 @@
 
                         if (response.ok && data.success) {
                             appendMessage(data.reply, 'bot');
+                            
+                            // Cập nhật lại lịch sử với tin nhắn mới nhất
+                            if (data.history) {
+                                chatHistory = data.history;
+                            } else {
+                                // Fallback nếu backend không trả về full history
+                                chatHistory.push({ role: 'user', text: text });
+                                chatHistory.push({ role: 'model', text: data.reply });
+                            }
                         } else {
-                            appendMessage(data.message || 'Xin lỗi, hệ thống đang bận. Vui lòng thử lại sau.', 'bot');
+                            // If 401 Unauthorized
+                            if (response.status === 401) {
+                                appendMessage('Vui lòng đăng nhập để sử dụng tính năng Chat.', 'bot');
+                            } else {
+                                appendMessage(data.message || 'Xin lỗi, hệ thống đang bận. Vui lòng thử lại sau.', 'bot');
+                            }
                         }
                     } catch (err) {
                         document.getElementById(loadingId).remove();
@@ -293,12 +366,10 @@
                     chatInput.focus();
                 };
 
-                sendBtn.addEventListener('click', sendMessage);
-                chatInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') sendMessage();
-                });
+                form.addEventListener('submit', sendMessage);
             });
         </script>
+        @endauth
         @stack('scripts')
     </body>
 </html>

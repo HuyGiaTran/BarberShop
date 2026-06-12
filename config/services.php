@@ -47,4 +47,12 @@ return [
         'expire_minutes' => (int) env('VNPAY_EXPIRE_MINUTES', 15),
     ],
 
+    'deposit_transfer' => [
+        'bank_bin' => env('DEPOSIT_TRANSFER_BANK_BIN'),
+        'bank_name' => env('DEPOSIT_TRANSFER_BANK_NAME'),
+        'bank_account' => env('DEPOSIT_TRANSFER_BANK_ACCOUNT'),
+        'account_name' => env('DEPOSIT_TRANSFER_ACCOUNT_NAME'),
+        'qr_template' => env('DEPOSIT_TRANSFER_QR_TEMPLATE', 'compact2'),
+    ],
+
 ];

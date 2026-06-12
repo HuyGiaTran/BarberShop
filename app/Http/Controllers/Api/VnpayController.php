@@ -4,14 +4,18 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
+use App\Models\Payment;
+use App\Services\PaymentFlowService;
 use App\Services\PaymentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
 
 class VnpayController extends Controller
 {
     public function __construct(
-        private readonly PaymentService $paymentService
+        private readonly PaymentService $paymentService,
+        private readonly PaymentFlowService $paymentFlowService
     ) {
     }
 
@@ -23,7 +27,7 @@ class VnpayController extends Controller
             'locale' => 'nullable|in:vn,en',
         ]);
 
-        $invoice = Invoice::with(['user', 'appointment.service'])->findOrFail($validated['invoice_id']);
+        $invoice = Invoice::with(['user', 'appointment.service', 'appointment.barber'])->findOrFail($validated['invoice_id']);
 
         if (! $request->user()->isAdmin() && $invoice->user_id !== $request->user()->id) {
             abort(403, 'Bạn không có quyền thanh toán hóa đơn này.');
@@ -33,14 +37,14 @@ class VnpayController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Hóa đơn này đã được thanh toán.',
-            ], 422);
+            ], 422, [], JSON_UNESCAPED_UNICODE);
         }
 
         if (! $invoice->appointment || $invoice->appointment->status !== 'completed') {
             return response()->json([
                 'success' => false,
                 'message' => 'Chỉ có thể thanh toán hóa đơn của lịch hẹn đã hoàn thành.',
-            ], 422);
+            ], 422, [], JSON_UNESCAPED_UNICODE);
         }
 
         $invoice->update([
@@ -48,20 +52,30 @@ class VnpayController extends Controller
             'payment_status' => 'unpaid',
         ]);
 
-        $paymentUrl = $this->paymentService->createPaymentUrl($invoice, [
-            'bank_code' => $validated['bank_code'] ?? null,
-            'locale' => $validated['locale'] ?? null,
-            'ip_addr' => $request->ip(),
-        ]);
+        $payment = $this->paymentFlowService->createInvoicePayment($invoice);
+
+        try {
+            $paymentUrl = $this->paymentService->createPaymentUrlForPayment($payment, [
+                'bank_code' => $validated['bank_code'] ?? null,
+                'locale' => $validated['locale'] ?? null,
+                'ip_addr' => $request->ip(),
+            ]);
+        } catch (InvalidArgumentException $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 422, [], JSON_UNESCAPED_UNICODE);
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Tạo URL thanh toán VNPAY thành công.',
             'data' => [
                 'invoice_id' => $invoice->id,
+                'payment_id' => $payment->id,
                 'payment_url' => $paymentUrl,
             ],
-        ]);
+        ], 200, [], JSON_UNESCAPED_UNICODE);
     }
 
     public function callback(Request $request): JsonResponse|\Illuminate\Http\Response
@@ -69,73 +83,70 @@ class VnpayController extends Controller
         $payload = $this->paymentService->extractVnpParameters($request->all());
 
         if (empty($payload) || ! $this->paymentService->verifyResponse($request->all())) {
-            $data = [
-                'success' => false,
-                'message' => 'Dữ liệu callback VNPAY không hợp lệ.',
-            ];
-
-            if ($request->expectsJson()) {
-                return response()->json($data, 400);
-            }
-
-            return response()->view('payments.result', [
-                'success' => false,
-                'message' => $data['message'],
-                'invoice' => null,
-                'responseCode' => $payload['vnp_ResponseCode'] ?? null,
-                'transactionStatus' => $payload['vnp_TransactionStatus'] ?? null,
-                'transactionNo' => $payload['vnp_TransactionNo'] ?? null,
-            ], 400);
+            return $this->callbackResponse(
+                $request,
+                false,
+                'Dữ liệu callback VNPAY không hợp lệ.',
+                null,
+                null,
+                $payload,
+                400
+            );
         }
 
-        $invoice = $this->resolveInvoiceFromPayload($payload);
+        [$payment, $invoice] = $this->resolveTargetsFromPayload($payload);
 
-        if (! $invoice) {
-            $data = [
-                'success' => false,
-                'message' => 'Không tìm thấy hóa đơn tương ứng.',
-            ];
-
-            if ($request->expectsJson()) {
-                return response()->json($data, 404);
-            }
-
-            return response()->view('payments.result', [
-                'success' => false,
-                'message' => $data['message'],
-                'invoice' => null,
-                'responseCode' => $payload['vnp_ResponseCode'] ?? null,
-                'transactionStatus' => $payload['vnp_TransactionStatus'] ?? null,
-                'transactionNo' => $payload['vnp_TransactionNo'] ?? null,
-            ], 404);
+        if (! $payment && ! $invoice) {
+            return $this->callbackResponse(
+                $request,
+                false,
+                'Không tìm thấy giao dịch tương ứng.',
+                null,
+                null,
+                $payload,
+                404
+            );
         }
 
-        $success = $this->paymentService->isSuccessfulPayment($payload);
-        $message = $success
-            ? 'Giao dịch VNPAY đã được xác thực. Trạng thái thanh toán sẽ được cập nhật qua IPN.'
-            : 'Giao dịch VNPAY không thành công.';
+        if ($this->paymentService->isSuccessfulPayment($payload)) {
+            if ($payment) {
+                $this->paymentFlowService->settleSuccessfulPayment($payment, $payload);
+                $payment->refresh();
+                $invoice = $payment->invoice?->fresh() ?? $invoice;
+            } elseif ($invoice) {
+                $this->paymentFlowService->markInvoiceAsPaid(
+                    $invoice,
+                    'vnpay',
+                    $payload['vnp_TransactionNo'] ?? $invoice->transaction_id
+                );
+                $invoice->refresh();
+            }
 
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => $success,
-                'message' => $message,
-                'data' => [
-                    'invoice_id' => $invoice->id,
-                    'payment_status' => $invoice->payment_status,
-                    'vnp_response_code' => $payload['vnp_ResponseCode'] ?? null,
-                    'vnp_transaction_status' => $payload['vnp_TransactionStatus'] ?? null,
-                ],
+            $message = $payment?->isDeposit()
+                ? 'Đặt cọc đã được xác thực và lượt hẹn của bạn đã được xác nhận.'
+                : 'Thanh toán hóa đơn đã được xác thực thành công.';
+
+            return $this->callbackResponse($request, true, $message, $payment, $invoice, $payload);
+        }
+
+        if ($payment) {
+            $this->paymentFlowService->markPaymentAsFailed($payment, $payload);
+        }
+
+        if ($invoice && $invoice->payment_status !== 'paid') {
+            $invoice->update([
+                'payment_method' => 'vnpay',
             ]);
         }
 
-        return response()->view('payments.result', [
-            'success' => $success,
-            'message' => $message,
-            'invoice' => $invoice,
-            'responseCode' => $payload['vnp_ResponseCode'] ?? null,
-            'transactionStatus' => $payload['vnp_TransactionStatus'] ?? null,
-            'transactionNo' => $payload['vnp_TransactionNo'] ?? null,
-        ]);
+        return $this->callbackResponse(
+            $request,
+            false,
+            'Giao dịch VNPAY không thành công.',
+            $payment,
+            $invoice,
+            $payload
+        );
     }
 
     public function ipn(Request $request): JsonResponse
@@ -156,12 +167,39 @@ class VnpayController extends Controller
             ]);
         }
 
-        $invoice = $this->resolveInvoiceFromPayload($payload);
+        [$payment, $invoice] = $this->resolveTargetsFromPayload($payload);
 
-        if (! $invoice) {
+        if (! $payment && ! $invoice) {
             return response()->json([
                 'RspCode' => '01',
                 'Message' => 'Order not found',
+            ]);
+        }
+
+        if ($payment) {
+            if (! $this->paymentService->matchesPaymentAmount($payment, (int) ($payload['vnp_Amount'] ?? 0))) {
+                return response()->json([
+                    'RspCode' => '04',
+                    'Message' => 'invalid amount',
+                ]);
+            }
+
+            if ($payment->status === 'paid') {
+                return response()->json([
+                    'RspCode' => '02',
+                    'Message' => 'Order already confirmed',
+                ]);
+            }
+
+            if ($this->paymentService->isSuccessfulPayment($payload)) {
+                $this->paymentFlowService->settleSuccessfulPayment($payment, $payload);
+            } else {
+                $this->paymentFlowService->markPaymentAsFailed($payment, $payload);
+            }
+
+            return response()->json([
+                'RspCode' => '00',
+                'Message' => 'Confirm Success',
             ]);
         }
 
@@ -180,11 +218,11 @@ class VnpayController extends Controller
         }
 
         if ($this->paymentService->isSuccessfulPayment($payload)) {
-            $invoice->update([
-                'payment_method' => 'vnpay',
-                'payment_status' => 'paid',
-                'transaction_id' => $payload['vnp_TransactionNo'] ?? $invoice->transaction_id,
-            ]);
+            $this->paymentFlowService->markInvoiceAsPaid(
+                $invoice,
+                'vnpay',
+                $payload['vnp_TransactionNo'] ?? $invoice->transaction_id
+            );
         } else {
             $invoice->update([
                 'payment_method' => 'vnpay',
@@ -197,14 +235,73 @@ class VnpayController extends Controller
         ]);
     }
 
-    private function resolveInvoiceFromPayload(array $payload): ?Invoice
-    {
-        $invoiceId = $this->paymentService->resolveInvoiceId((string) ($payload['vnp_TxnRef'] ?? ''));
+    private function callbackResponse(
+        Request $request,
+        bool $success,
+        string $message,
+        ?Payment $payment,
+        ?Invoice $invoice,
+        array $payload,
+        int $status = 200
+    ): JsonResponse|\Illuminate\Http\Response {
+        $targetReference = $payment?->isDeposit()
+            ? ($payment->booking_reference ?: 'N/A')
+            : ($invoice ? '#'.$invoice->id : 'N/A');
 
-        if (! $invoiceId) {
-            return null;
+        $currentStatus = $payment?->status
+            ?? $invoice?->payment_status
+            ?? 'unknown';
+
+        $viewData = [
+            'success' => $success,
+            'message' => $message,
+            'payment' => $payment,
+            'invoice' => $invoice,
+            'targetType' => $payment?->isDeposit() ? 'deposit' : 'invoice',
+            'targetReference' => $targetReference,
+            'currentStatus' => $currentStatus,
+            'responseCode' => $payload['vnp_ResponseCode'] ?? null,
+            'transactionStatus' => $payload['vnp_TransactionStatus'] ?? null,
+            'transactionNo' => $payload['vnp_TransactionNo'] ?? null,
+        ];
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => $success,
+                'message' => $message,
+                'data' => [
+                    'payment_id' => $payment?->id,
+                    'invoice_id' => $invoice?->id,
+                    'target_type' => $viewData['targetType'],
+                    'target_reference' => $targetReference,
+                    'current_status' => $currentStatus,
+                    'vnp_response_code' => $viewData['responseCode'],
+                    'vnp_transaction_status' => $viewData['transactionStatus'],
+                ],
+            ], $status, [], JSON_UNESCAPED_UNICODE);
         }
 
-        return Invoice::find($invoiceId);
+        return response()->view('payments.result', $viewData, $status);
+    }
+
+    /**
+     * @return array{0: ?Payment, 1: ?Invoice}
+     */
+    private function resolveTargetsFromPayload(array $payload): array
+    {
+        $txnRef = (string) ($payload['vnp_TxnRef'] ?? '');
+        $payment = $this->paymentService->resolvePaymentByTxnRef($txnRef);
+
+        if ($payment) {
+            return [$payment, $payment->invoice];
+        }
+
+        $invoiceId = $this->paymentService->resolveInvoiceId($txnRef);
+
+        if (! $invoiceId) {
+            return [null, null];
+        }
+
+        return [null, Invoice::find($invoiceId)];
     }
 }

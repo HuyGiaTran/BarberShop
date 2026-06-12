@@ -101,6 +101,21 @@ class VnpayControllerTest extends TestCase
             'payment_status' => 'paid',
             'transaction_id' => 'VN654321',
         ]);
+
+        $this->assertDatabaseHas('loyalty_programs', [
+            'user_id' => $invoice->user_id,
+            'points' => 199,
+            'tier' => 'bronze',
+        ]);
+
+        $this->assertDatabaseHas('loyalty_point_logs', [
+            'user_id' => $invoice->user_id,
+            'invoice_id' => $invoice->id,
+            'source_type' => 'invoice_paid',
+            'source_id' => $invoice->id,
+            'points' => 199,
+            'balance_after' => 199,
+        ]);
     }
 
     private function createInvoiceContext(): array

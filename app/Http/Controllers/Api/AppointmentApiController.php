@@ -9,6 +9,7 @@ use App\Services\AppointmentService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class AppointmentApiController extends Controller
 {
@@ -97,11 +98,18 @@ class AppointmentApiController extends Controller
      */
     public function store(Request $request): JsonResponse
 {
+    if (!$request->has('service_ids') && $request->filled('service_id')) {
+        $request->merge([
+            'service_ids' => [(int) $request->input('service_id')],
+        ]);
+    }
+
     // Validate dữ liệu
     $validated = $request->validate([
         'user_id' => 'required|exists:users,id',
         'barber_id' => 'required|exists:barbers,id',
-        'service_id' => 'required|exists:services,id',
+        'service_ids' => 'required|array|min:1',
+        'service_ids.*' => 'exists:services,id',
         'appointment_date' => 'required|date|after_or_equal:today',
         'appointment_time' => 'required|string',
         'status' => 'required|in:pending,confirmed,completed,cancelled',
@@ -111,8 +119,9 @@ class AppointmentApiController extends Controller
         'user_id.exists' => 'Khách hàng không tồn tại.',
         'barber_id.required' => 'Vui lòng chọn thợ cắt tóc.',
         'barber_id.exists' => 'Thợ cắt tóc không tồn tại.',
-        'service_id.required' => 'Vui lòng chọn dịch vụ.',
-        'service_id.exists' => 'Dịch vụ không tồn tại.',
+        'service_ids.required' => 'Vui lòng chọn ít nhất một dịch vụ.',
+        'service_ids.array' => 'Dịch vụ không hợp lệ.',
+        'service_ids.*.exists' => 'Dịch vụ không tồn tại.',
         'appointment_date.required' => 'Vui lòng chọn ngày hẹn.',
         'appointment_date.after_or_equal' => 'Ngày hẹn không được nhỏ hơn ngày hôm nay.',
         'appointment_time.required' => 'Vui lòng chọn khung giờ hẹn.',
@@ -120,7 +129,9 @@ class AppointmentApiController extends Controller
         'status.in' => 'Trạng thái không hợp lệ.',
     ]);
 
-    $service = Service::findOrFail($validated['service_id']);
+    $services = Service::whereIn('id', $validated['service_ids'])->get();
+    $totalDuration = $services->sum('duration_minutes');
+    $selectedTime = substr((string) $validated['appointment_time'], 0, 5);
 
     // Logic chặn hoàn thành lịch hẹn trong tương lai
     if ($request->status === 'completed' && Carbon::parse($request->appointment_date)->isFuture()) {
@@ -131,65 +142,85 @@ class AppointmentApiController extends Controller
         ], 422, [], JSON_UNESCAPED_UNICODE);
     }
 
-    // Kiểm tra xem thợ cắt tóc đã có lịch trùng giờ chưa
-    if ($this->appointmentService->isBarberOnApprovedLeave(
+    $availability = $this->appointmentService->getBookingAvailability(
         (int) $validated['barber_id'],
         $validated['appointment_date']
-    )) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Thợ cắt tóc đang nghỉ phép trong ngày bạn chọn. Vui lòng chọn ngày khác.',
-            'error' => 'barber_on_leave',
-        ], 409, [], JSON_UNESCAPED_UNICODE);
-    }
-
-    $isOverlapping = $this->appointmentService->hasConflict(
-        (int) $validated['barber_id'],
-        $validated['appointment_date'],
-        $validated['appointment_time'],
-        (int) $service->duration_minutes
     );
 
-    if ($isOverlapping) {
+    if (! $availability['bookable']) {
         return response()->json([
             'success' => false,
-            'message' => 'Thợ cắt tóc đã có lịch hẹn bị chồng chéo trong khoảng thời gian này. Vui lòng chọn giờ hoặc thợ khác.',
-            'error' => 'appointment_time_conflict',
+            'message' => $this->bookingAvailabilityMessage((string) $availability['reason']),
+            'error' => $availability['reason'],
         ], 409, [], JSON_UNESCAPED_UNICODE);
     }
 
-    // Tạo lịch hẹn mới
-    $appointment = Appointment::create($validated);
-    $appointment->load(['user', 'barber', 'service']);
+    $availableSlots = $this->appointmentService->availableSlotsForDuration(
+        (int) $validated['barber_id'],
+        $validated['appointment_date'],
+        (int) $totalDuration
+    );
 
-    // Gửi email thông báo
-    $appointment->user->notify(new \App\Notifications\AppointmentBooked($appointment));
+    if (! in_array($selectedTime, $availableSlots, true)) {
+        $isOverlapping = $this->appointmentService->hasConflict(
+            (int) $validated['barber_id'],
+            $validated['appointment_date'],
+            $validated['appointment_time'],
+            (int) $totalDuration
+        );
+
+        return response()->json([
+            'success' => false,
+            'message' => $isOverlapping
+                ? 'Thợ cắt tóc đã có lịch hẹn bị chồng chéo trong khoảng thời gian này. Vui lòng chọn giờ hoặc thợ khác.'
+                : 'Barber không làm việc hoặc không còn đủ thời lượng trống cho khung giờ bạn chọn.',
+            'error' => $isOverlapping ? 'appointment_time_conflict' : 'barber_unavailable_slot',
+        ], 409, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    $currentTime = Carbon::createFromFormat('H:i', substr($validated['appointment_time'], 0, 5));
+    $createdAppointments = [];
+    $firstAppointment = null;
+    $bookingReference = $this->generateBookingReference();
+
+    foreach ($validated['service_ids'] as $index => $serviceId) {
+        $service = $services->firstWhere('id', $serviceId);
+        if (!$service) continue;
+
+        $appointment = Appointment::create([
+            'user_id' => $validated['user_id'],
+            'barber_id' => $validated['barber_id'],
+            'service_id' => $service->id,
+            'booking_reference' => $bookingReference,
+            'booking_sequence' => $index + 1,
+            'is_booking_primary' => $index === 0,
+            'appointment_date' => $validated['appointment_date'],
+            'appointment_time' => $currentTime->format('H:i'),
+            'status' => $validated['status'],
+            'notes' => count($validated['service_ids']) > 1 ? ($validated['notes'] . ' (Gộp nhiều dịch vụ)') : $validated['notes'],
+            'deposit_amount' => $index === 0 ? 50000 : 0,
+            'deposit_status' => 'unpaid',
+        ]);
+        
+        $appointment->load(['user', 'barber', 'service']);
+        $createdAppointments[] = $appointment;
+        if (!$firstAppointment) $firstAppointment = $appointment;
+
+        $currentTime->addMinutes($service->duration_minutes);
+    }
+
+    if (count($createdAppointments) > 0) {
+        // Gửi email thông báo cho lịch hẹn đầu tiên đại diện
+        $firstAppointment->user->notify(new \App\Notifications\AppointmentBooked($firstAppointment));
+    }
 
     return response()->json([
         'success' => true,
         'message' => 'Đặt lịch hẹn thành công!',
         'data' => [
-            'id' => $appointment->id,
-            'date' => $appointment->appointment_date,
-            'time' => $appointment->appointment_time,
-            'status' => $appointment->status,
-            'notes' => $appointment->notes,
-
-            'user' => [
-                'id' => $appointment->user->id,
-                'name' => $appointment->user->name,
-            ],
-
-            'barber' => [
-                'id' => $appointment->barber->id,
-                'name' => $appointment->barber->name,
-            ],
-
-            'service' => [
-                'id' => $appointment->service->id,
-                'name' => $appointment->service->name,
-                'price' => $appointment->service->price,
-            ],
+            'booking_reference' => $bookingReference,
+            'total_appointments_created' => count($createdAppointments),
+            'first_appointment_id' => $firstAppointment ? $firstAppointment->id : null,
         ],
     ], 201, [], JSON_UNESCAPED_UNICODE);
 }
@@ -221,15 +252,23 @@ class AppointmentApiController extends Controller
     {
         $request->validate([
             'date' => 'required|date',
+            'duration_minutes' => 'nullable|integer|min:1|max:480',
         ]);
 
-        $available = $this->appointmentService->availableSlotsForBarber((int) $id, $request->date);
+        $durationMinutes = (int) $request->integer('duration_minutes', 30);
+        $availability = $this->appointmentService->getBookingAvailability((int) $id, $request->date);
+        $available = $availability['bookable']
+            ? $this->appointmentService->availableSlotsForDuration((int) $id, $request->date, $durationMinutes)
+            : [];
 
         return response()->json([
             'success' => true,
             'data' => $available,
             'meta' => [
                 'is_on_leave' => $this->appointmentService->isBarberOnApprovedLeave((int) $id, $request->date),
+                'availability_reason' => $availability['reason'],
+                'working_status' => $availability['barber']?->working_status ?? null,
+                'is_active' => $availability['barber']?->is_active ?? false,
             ],
         ]);
     }
@@ -275,6 +314,7 @@ class AppointmentApiController extends Controller
     ]);
 
     $service = Service::findOrFail($validated['service_id']);
+    $selectedTime = substr((string) $validated['appointment_time'], 0, 5);
 
     // ❌ Không cho hoàn thành lịch hẹn trong tương lai
     if (
@@ -288,31 +328,41 @@ class AppointmentApiController extends Controller
         ], 422);
     }
 
-    // ❌ Kiểm tra trùng lịch (loại trừ chính appointment hiện tại)
-    if ($this->appointmentService->isBarberOnApprovedLeave(
+    $availability = $this->appointmentService->getBookingAvailability(
         (int) $validated['barber_id'],
         $validated['appointment_date']
-    )) {
+    );
+
+    if (! $availability['bookable']) {
         return response()->json([
             'success' => false,
-            'message' => 'Thợ cắt tóc đang nghỉ phép trong ngày bạn chọn. Vui lòng chọn ngày khác.',
-            'error' => 'barber_on_leave',
+            'message' => $this->bookingAvailabilityMessage((string) $availability['reason']),
+            'error' => $availability['reason'],
         ], 409, [], JSON_UNESCAPED_UNICODE);
     }
 
-    $isOverlapping = $this->appointmentService->hasConflict(
+    $availableSlots = $this->appointmentService->availableSlotsForDuration(
         (int) $validated['barber_id'],
         $validated['appointment_date'],
-        $validated['appointment_time'],
         (int) $service->duration_minutes,
         $appointment->id
     );
 
-    if ($isOverlapping) {
+    if (! in_array($selectedTime, $availableSlots, true)) {
+        $isOverlapping = $this->appointmentService->hasConflict(
+            (int) $validated['barber_id'],
+            $validated['appointment_date'],
+            $validated['appointment_time'],
+            (int) $service->duration_minutes,
+            $appointment->id
+        );
+
         return response()->json([
             'success' => false,
-            'message' => 'Khung giờ này đang bị chồng chéo với lịch hẹn khác. Vui lòng chọn thời gian khác.',
-            'error' => 'appointment_time_conflict',
+            'message' => $isOverlapping
+                ? 'Khung giờ này đang bị chồng chéo với lịch hẹn khác. Vui lòng chọn thời gian khác.'
+                : 'Barber không làm việc hoặc không còn đủ thời lượng trống cho khung giờ bạn chọn.',
+            'error' => $isOverlapping ? 'appointment_time_conflict' : 'barber_unavailable_slot',
         ], 409);
     }
 
@@ -374,5 +424,23 @@ class AppointmentApiController extends Controller
             'success' => true,
             'message' => 'Xóa lịch hẹn thành công!',
         ], 200);
+    }
+
+    private function bookingAvailabilityMessage(string $reason): string
+    {
+        return match ($reason) {
+            'barber_inactive' => 'Barber này hiện đang ngưng nhận khách.',
+            'barber_busy' => 'Barber này đang bận và tạm thời không nhận lịch mới.',
+            'barber_off' => 'Barber này hiện không làm việc.',
+            'barber_on_leave' => 'Thợ cắt tóc đang nghỉ phép trong ngày bạn chọn. Vui lòng chọn ngày khác.',
+            'no_schedule' => 'Barber này chưa mở lịch làm việc cho ngày bạn chọn.',
+            'blocked_schedule' => 'Barber này không làm việc trong khung ngày đã chọn.',
+            default => 'Barber hiện không sẵn sàng để nhận lịch vào thời điểm này.',
+        };
+    }
+
+    private function generateBookingReference(): string
+    {
+        return 'BKG-'.now()->format('YmdHis').'-'.Str::upper(Str::random(6));
     }
 }

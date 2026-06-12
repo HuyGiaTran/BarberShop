@@ -23,7 +23,6 @@ Route::get('/barbers/{id}', [BarberApiController::class, 'show']);
 Route::get('/barbers/{id}/reviews', [App\Http\Controllers\Api\ReviewApiController::class, 'index']);
 Route::get('/barbers/{id}/slots', [AppointmentApiController::class, 'slots']);
 
-Route::post('/chatbot/ask', [App\Http\Controllers\Api\ChatbotController::class, 'ask']);
 Route::match(['GET', 'POST'], '/vnpay/callback', [VnpayController::class, 'callback']);
 Route::match(['GET', 'POST'], '/vnpay/ipn', [VnpayController::class, 'ipn']);
 
@@ -31,6 +30,7 @@ Route::match(['GET', 'POST'], '/vnpay/ipn', [VnpayController::class, 'ipn']);
 // PROTECTED API (Yêu cầu đăng nhập qua Sanctum)
 // ========================================================================
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/chatbot/ask', [App\Http\Controllers\Api\ChatbotController::class, 'ask']);
     Route::post('/logout', [AuthApiController::class, 'logout']);
     Route::get('/user', [AuthApiController::class, 'user']);
 

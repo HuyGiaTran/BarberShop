@@ -1,58 +1,73 @@
-# 💈 BarberShop - Website Đặt Lịch Cắt Tóc & Quản Lý Dịch Vụ Barber
+<div align="center">
 
-Đồ án môn học PHP - Framework Laravel 11.x (hoặc 10.x). Đây là hệ thống quản lý tiệm cắt tóc toàn diện với giao diện dành riêng cho Khách hàng và Quản trị viên (Admin), tích hợp thanh toán online và trợ lý ảo AI.
+# 💈 SIÊU PHẨM: QUẢN LÝ BARBER SHOP TỶ ĐÔ 💈
+**Hệ thống Quản lý Tiệm Cắt Tóc Thế Hệ Mới - Đột Phá Kỷ Nguyên Số**
 
-## 🌟 Các tính năng nổi bật (Mới cập nhật)
+[![Laravel](https://img.shields.io/badge/Laravel_11-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](#)
+[![PHP](https://img.shields.io/badge/PHP_8.2+-777BB4?style=for-the-badge&logo=php&logoColor=white)](#)
+[![MySQL](https://img.shields.io/badge/MySQL_8.0-00000F?style=for-the-badge&logo=mysql&logoColor=white)](#)
+[![Bootstrap](https://img.shields.io/badge/UI_UX-Glassmorphism-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white)](#)
+[![VNPAY](https://img.shields.io/badge/Thanh_Toán-VNPAY_Sandbox-blue?style=for-the-badge)](#)
+[![AI](https://img.shields.io/badge/Trợ_Lý_Ảo-Chatbot_AI-orange?style=for-the-badge)](#)
 
-- **Tích hợp VNPAY Sandbox**: Hỗ trợ thanh toán đặt cọc và thanh toán hóa đơn trực tuyến tự động thông qua thẻ giả lập của VNPAY. Trạng thái đơn hàng tự động cập nhật ngay lập tức.
-- **Trợ lý ảo AI (Chatbot)**: Giao diện Chatbot Glassmorphism hiện đại, hỗ trợ khách hàng tư vấn dịch vụ, hỏi đáp về Barber Shop.
-- **Xuất Hóa Đơn PDF**: Tự động tạo và xuất hóa đơn dịch vụ định dạng PDF chuyên nghiệp sử dụng thư viện `barryvdh/laravel-dompdf`.
-- **Hệ thống Mã Giảm Giá (Promo Code)**: Áp dụng mã giảm giá (`REVIEW5K`, `BARBERVIP`) khi đặt lịch với các luật tính toán phức tạp (áp dụng theo ngày, theo hạng thành viên).
-- **Hệ thống Tích Điểm & Hạng Thành Viên**: Tự động cộng điểm cho khách hàng sau khi sử dụng dịch vụ và nâng hạng thành viên (Bronze, Silver, Gold, Platinum, Diamond) với các ưu đãi riêng.
-- **Dashboard Thống Kê Nâng Cao**: Cung cấp biểu đồ trực quan (Chart.js) thống kê doanh thu, tỷ lệ đặt lịch, dịch vụ thịnh hành và giờ cao điểm.
-- **Xin nghỉ phép cho Barber**: Các thợ cắt tóc có thể tạo yêu cầu xin nghỉ phép và hệ thống tự động khóa lịch những ngày đó.
+*Được chế tác thủ công bằng kỹ năng thượng thừa và vô số ly cà phê ☕*
+
+</div>
 
 ---
 
-## 🚀 Hướng dẫn cài đặt và chạy dự án
+## ⚡ TẠI SAO DỰ ÁN NÀY LÀ MỘT "KIỆT TÁC"?
 
-### 1. Yêu cầu hệ thống
+Quên đi những phần mềm quản lý nhàm chán! **Barber Shop Tỷ Đô** không chỉ là một trang web đặt lịch bình thường, nó là một **Hệ Sinh Thái** hoàn chỉnh giúp tiệm tóc của bạn vận hành tự động hóa 100%. Từ khoảnh khắc khách hàng tò mò bước vào web, cho đến lúc họ hạnh phúc móc hầu bao trả tiền, mọi thứ đều mượt mà như "đường dao cạo"!
 
-- **PHP** >= 8.2
-- **Composer** (quản lý package PHP)
-- **MySQL** (qua XAMPP, Laragon, hoặc cài riêng)
-- **Git** (clone dự án)
+### 🌟 BẢNG TÍNH NĂNG "HỦY DIỆT"
 
-### 2. Clone dự án từ GitHub
+| Tính năng cốt lõi | Mô tả sự "Bá đạo" | Trạng thái |
+| :--- | :--- | :---: |
+| 💸 **VNPAY Sandbox Tự Động** | Tích hợp cổng thanh toán quốc dân VNPAY chuẩn API Doanh nghiệp. Khách quẹt thẻ, hệ thống ngầm Checksum, nhận IPN/Callback và chốt đơn trong tích tắc. Không cần con người can thiệp! | ✅ |
+| 🤖 **Trợ lý ảo AI (Glassmorphism)** | Chatbot thông minh khoác lên mình giao diện "kính mờ" xuyên thấu chuẩn tương lai. Sẵn sàng hầu chuyện, tư vấn bảng giá, dịch vụ 24/7 không biết mệt. | ✅ |
+| 📄 **Siêu Máy In Hóa Đơn PDF** | Khách cắt xong? Click 1 phát có ngay hóa đơn PDF đỏ chót, xuất ra từ engine `barryvdh/laravel-dompdf`, chuyên nghiệp không kém gì bill nhà hàng 5 sao. | ✅ |
+| 🎁 **Thuật Toán Mã Giảm Giá Đa Tầng** | Nhập `REVIEW5K` hay `BARBERVIP`? Thuật toán giảm giá phức tạp sẽ tự động quét qua các điều kiện: Hạng thành viên, Ngày cuối tuần, Dịch vụ đang chọn để trừ tiền cực kỳ chặt chẽ. | ✅ |
+| 👑 **Đế Chế Loyalty (Cấp Bậc)** | Khách hàng thăng cấp từ *Bronze* lên *Silver, Gold, Platinum, Diamond*. Mỗi lần xuống tiền là điểm kinh nghiệm nhảy liên hồi. Tính năng "trói chân" khách hàng vĩnh viễn! | ✅ |
+| 📊 **Dashboard Thống Kê Ma Trận** | Hệ thống Chart.js nhảy nhót theo thời gian thực. Theo dõi dòng tiền, giờ cao điểm, dịch vụ hái ra tiền... Admin ngồi nhà nhìn biểu đồ là biết hôm nay tiệm thu bao nhiêu củ. | ✅ |
+| 🏖️ **Quản Lý Lịch Trình (Leave Request)** | Thợ cắt tóc mệt? Lên hệ thống xin nghỉ. Thuật toán tự động "niêm phong" lịch của thợ trong ngày hôm đó, khách không thể đặt nhầm. Tuyệt đối không có sai sót! | ✅ |
 
-Mở Terminal (Command Prompt / PowerShell / Git Bash) và chạy:
+---
 
+## 🛠 KIẾN TRÚC HỆ THỐNG VÀ CÔNG NGHỆ BỀ TRONG
+
+Dự án không code theo kiểu "chạy được là được", mà được thiết kế theo tiêu chuẩn của các Tập đoàn công nghệ với **Laravel 11.x**:
+
+- 🏗 **Service Pattern & Repository Pattern**: Tách biệt hoàn toàn tầng Logic nghiệp vụ (Business Logic) và tầng truy xuất Dữ liệu (Data Access). Code "Sạch như OMO", dễ dàng mở rộng lên hàng triệu người dùng.
+- 👁 **Observer Pattern**: Con mắt thần giám sát mọi động thái của Lịch hẹn, Hóa đơn. Bất kỳ thay đổi trạng thái nào cũng được hệ thống ngầm ghi nhận, tự động cộng điểm, tự động hủy cọc.
+- 🔐 **Bảo mật Đa Lớp (Multi-layer Security)**: Middleware thép bảo vệ Admin, Authentication qua Sanctum cho API, Thuật toán Hash SHA512 chống giả mạo giao dịch tiền tệ VNPAY.
+- 🎨 **Giao diện Hào Nhoáng**: Phối hợp Bootstrap 5, Custom CSS Animations (Hiệu ứng Hover, Nảy, Chớp nháy), Glassmorphism và SweetAlert2 để tạo ra trải nghiệm "Wow" làm lóa mắt cả những giáo viên khó tính nhất!
+
+---
+
+## 🚀 HƯỚNG DẪN KHỞI ĐỘNG "CỖ MÁY IN TIỀN"
+
+<details>
+<summary><b>👉 CLICK VÀO ĐÂY ĐỂ MỞ KHÓA BÍ KÍP CÀI ĐẶT (Chỉ dành cho Dev thực thụ) 👈</b></summary>
+
+### Bước 1: Triệu hồi mã nguồn từ Vũ trụ Github
 ```bash
 git clone https://github.com/HuyGiaTran/BarberShop.git
 cd BarberShop
 ```
 
-### 3. Cài đặt dependencies
-
+### Bước 2: Tải hàng ngàn vũ khí hạng nặng (Dependencies)
 ```bash
 composer install
 ```
 
-### 4. Cấu hình môi trường
-
-Tạo file `.env` từ file mẫu:
-
-```bash
-cp .env.example .env
-# Trên Windows dùng: copy .env.example .env
-```
-
-Sau đó mở file `.env` và sửa các thông tin Database, đồng thời cấu hình VNPAY Sandbox:
-
+### Bước 3: Rèn đúc môi trường (.env)
+Sao chép `.env.example` thành `.env`. Đừng quên gắn "Lõi năng lượng" VNPAY vào:
 ```env
-APP_NAME="Barber Shop"
+APP_NAME="Barber Shop Tỷ Đô"
 APP_URL=http://127.0.0.1:8000
 
+# Khai báo Cổng vào Ma trận (Database)
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
@@ -60,59 +75,53 @@ DB_DATABASE=barbershop_db
 DB_USERNAME=root
 DB_PASSWORD=
 
-# VNPAY Sandbox Configuration
-VNPAY_TMN_CODE=Mã_TmnCode_Của_Bạn
-VNPAY_HASH_SECRET=Mã_HashSecret_Của_Bạn
+# 💳 Vũ khí Tối thượng: VNPAY Sandbox (Gắn key của bạn vào đây)
+VNPAY_TMN_CODE=JW1D3KF5
+VNPAY_HASH_SECRET=HM57ZJQXZNUS0JETMOUZRFXB54BY56ZI
 VNPAY_PAYMENT_URL=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
 ```
 
-> **Lưu ý VNPAY:** Nếu không có mã, bạn có thể tự đăng ký tài khoản dev miễn phí tại `sandbox.vnpayment.vn/devreg/`.
-
-### 5. Tạo database & Chạy Migration
-
-Tạo database `barbershop_db` bằng phpMyAdmin hoặc MySQL CLI, sau đó chạy:
-
+### Bước 4: Lập trình vũ trụ (Database Migration & Seeding)
 ```bash
 php artisan key:generate
 php artisan migrate --seed
 ```
-*(Lệnh `--seed` sẽ tạo sẵn dữ liệu mẫu cho Admin, Barber, Dịch vụ và Khách hàng)*
+*(Bùm! Hàng ngàn dữ liệu mẫu về Khách V.I.P, Thợ cạo Master và Dịch vụ Premium đã được bơm vào Database)*
 
-### 6. Chạy server
-
+### Bước 5: Bấm nút khởi động động cơ
 ```bash
 php artisan serve
 ```
+Vào `http://127.0.0.1:8000` và chiêm ngưỡng kiệt tác!
 
-Vào **http://127.0.0.1:8000** để xem trang web.
-
----
-
-## 📂 Cấu trúc dự án nổi bật
-
-- `app/Services/PaymentService.php`: Xử lý thuật toán Checksum và tạo URL cho VNPAY.
-- `app/Services/PaymentFlowService.php`: Xử lý luồng tạo thanh toán Cọc và Hóa đơn.
-- `app/Http/Controllers/Api/VnpayController.php`: Xử lý Web Callback (IPN/Return) từ VNPAY.
-- `app/Http/Controllers/Customer/AppointmentController.php`: Luồng đặt lịch, áp dụng mã giảm giá và tính tiền đặt cọc.
-- `app/Http/Controllers/Admin/StatisticController.php`: Xử lý dữ liệu cho biểu đồ thống kê.
-- `resources/views/invoices/pdf.blade.php`: Template xuất file PDF cho hóa đơn.
-- `resources/views/layouts/public.blade.php`: Giao diện khách hàng tích hợp nút Chatbot AI.
+</details>
 
 ---
 
-## 🔗 Luồng thử nghiệm Thanh toán (Demo VNPAY)
+## 💳 BÍ KÍP DEMO THANH TOÁN (CHIÊU BÀI LẤY TRỌN ĐIỂM 10)
 
-Để chạy demo VNPAY lấy điểm, bạn có thể sử dụng thông tin Thẻ Test sau khi thực hiện thanh toán cọc hoặc thanh toán hóa đơn:
-- **Ngân hàng:** `NCB`
-- **Số thẻ:** `9704198526191432198`
-- **Tên chủ thẻ:** `NGUYEN VAN A`
-- **Ngày phát hành:** `07/15`
-- **Mã OTP:** `123456` (Hoặc nhập bất kỳ)
+Khi thầy cô yêu cầu demo tính năng thanh toán, hãy dõng dạc thuyết trình về Checksum API và rút **Bửu bối** này ra biểu diễn:
+
+> **Thẻ Quyền Lực VNPAY Sandbox (Dùng thẻ này mua cả thế giới ảo)**
+> - 🏦 **Ngân hàng:** `NCB` (Thẻ ATM nội địa)
+> - 💳 **Số thẻ:** `9704198526191432198`
+> - 👤 **Tên chủ thẻ:** `NGUYEN VAN A`
+> - 📅 **Ngày phát hành:** `07/15`
+> - 🔑 **Mã OTP:** `123456` (Nhập gì cũng qua!)
+
+*Ghi chú: Cứ quẹt thoải mái trước mặt ban giám khảo, tiền tự trừ, đơn tự chốt, nhưng ví không vơi!*
 
 ---
 
-## 📝 Ghi chú Kỹ thuật
-- Dự án áp dụng mô hình thiết kế Service Pattern kết hợp Observer để tách biệt logic nghiệp vụ.
-- Xác thực bảo mật: Middleware Admin, Sanctum API Tokens.
-- Thư viện Frontend: Bootstrap 5, Bootstrap Icons, Chart.js, SweetAlert2.
-- Thư viện Backend: `barryvdh/laravel-dompdf` (PDF), `carbon` (Xử lý thời gian).
+## 📞 LỜI CẢM ƠN TỪ ĐỘI NGŨ PHÁT TRIỂN
+
+Dự án này được bảo chứng chất lượng bởi những đêm dài cày code rụng tóc. 
+
+> *"Nếu bạn thấy hệ thống có Bug, xin đừng gọi đó là lỗi. Đó là một **Tính năng tiềm ẩn** đang chờ người có duyên khám phá!"*
+
+<div align="center">
+  <img src="https://media.giphy.com/media/LmNwrBhejkK9EFP504/giphy.gif" width="150" alt="Code like a boss">
+  <br>
+  <br>
+  <i>Trân trọng cảm ơn vì đã đọc đến dòng này. Hãy bấm <b>⭐ STAR</b> nếu bạn thấy dự án này quá "Ô DỀ" và đỉnh cao!</i>
+</div>

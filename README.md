@@ -1,16 +1,26 @@
-# 💈 BarberShop - Website Đặt Lịch Cắt Tóc
+# 💈 BarberShop - Website Đặt Lịch Cắt Tóc & Quản Lý Dịch Vụ Barber
 
-Đồ án môn học PHP - Framework Laravel
+Đồ án môn học PHP - Framework Laravel 11.x (hoặc 10.x). Đây là hệ thống quản lý tiệm cắt tóc toàn diện với giao diện dành riêng cho Khách hàng và Quản trị viên (Admin), tích hợp thanh toán online và trợ lý ảo AI.
 
+## 🌟 Các tính năng nổi bật (Mới cập nhật)
+
+- **Tích hợp VNPAY Sandbox**: Hỗ trợ thanh toán đặt cọc và thanh toán hóa đơn trực tuyến tự động thông qua thẻ giả lập của VNPAY. Trạng thái đơn hàng tự động cập nhật ngay lập tức.
+- **Trợ lý ảo AI (Chatbot)**: Giao diện Chatbot Glassmorphism hiện đại, hỗ trợ khách hàng tư vấn dịch vụ, hỏi đáp về Barber Shop.
+- **Xuất Hóa Đơn PDF**: Tự động tạo và xuất hóa đơn dịch vụ định dạng PDF chuyên nghiệp sử dụng thư viện `barryvdh/laravel-dompdf`.
+- **Hệ thống Mã Giảm Giá (Promo Code)**: Áp dụng mã giảm giá (`REVIEW5K`, `BARBERVIP`) khi đặt lịch với các luật tính toán phức tạp (áp dụng theo ngày, theo hạng thành viên).
+- **Hệ thống Tích Điểm & Hạng Thành Viên**: Tự động cộng điểm cho khách hàng sau khi sử dụng dịch vụ và nâng hạng thành viên (Bronze, Silver, Gold, Platinum, Diamond) với các ưu đãi riêng.
+- **Dashboard Thống Kê Nâng Cao**: Cung cấp biểu đồ trực quan (Chart.js) thống kê doanh thu, tỷ lệ đặt lịch, dịch vụ thịnh hành và giờ cao điểm.
+- **Xin nghỉ phép cho Barber**: Các thợ cắt tóc có thể tạo yêu cầu xin nghỉ phép và hệ thống tự động khóa lịch những ngày đó.
+
+---
 
 ## 🚀 Hướng dẫn cài đặt và chạy dự án
 
 ### 1. Yêu cầu hệ thống
 
-- **PHP** >= 8.1 (khuyến nghị 8.2+)
+- **PHP** >= 8.2
 - **Composer** (quản lý package PHP)
 - **MySQL** (qua XAMPP, Laragon, hoặc cài riêng)
-- **Node.js** & **NPM** (cho frontend assets - không bắt buộc nếu chỉ chạy web)
 - **Git** (clone dự án)
 
 ### 2. Clone dự án từ GitHub
@@ -18,11 +28,6 @@
 Mở Terminal (Command Prompt / PowerShell / Git Bash) và chạy:
 
 ```bash
-cd C:\xampp\htdocs  # Nếu dùng XAMPP trên Windows
-# hoặc
-cd /Applications/XAMPP/htdocs  # Nếu dùng XAMPP trên macOS
-# hoặc thư mục bất kỳ bạn muốn đặt project
-
 git clone https://github.com/HuyGiaTran/BarberShop.git
 cd BarberShop
 ```
@@ -33,8 +38,6 @@ cd BarberShop
 composer install
 ```
 
-> Lệnh này sẽ tải tất cả thư viện cần thiết (Laravel framework, Sanctum, ...)
-
 ### 4. Cấu hình môi trường
 
 Tạo file `.env` từ file mẫu:
@@ -44,11 +47,11 @@ cp .env.example .env
 # Trên Windows dùng: copy .env.example .env
 ```
 
-Sau đó mở file `.env` và sửa các dòng sau:
+Sau đó mở file `.env` và sửa các thông tin Database, đồng thời cấu hình VNPAY Sandbox:
 
 ```env
-APP_NAME=BarberShop
-APP_URL=http://localhost:8080
+APP_NAME="Barber Shop"
+APP_URL=http://127.0.0.1:8000
 
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
@@ -56,155 +59,60 @@ DB_PORT=3306
 DB_DATABASE=barbershop_db
 DB_USERNAME=root
 DB_PASSWORD=
+
+# VNPAY Sandbox Configuration
+VNPAY_TMN_CODE=Mã_TmnCode_Của_Bạn
+VNPAY_HASH_SECRET=Mã_HashSecret_Của_Bạn
+VNPAY_PAYMENT_URL=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
 ```
 
-> ℹ️ **Lưu ý:** Nếu MySQL của bạn có mật khẩu, hãy nhập vào `DB_PASSWORD`.
+> **Lưu ý VNPAY:** Nếu không có mã, bạn có thể tự đăng ký tài khoản dev miễn phí tại `sandbox.vnpayment.vn/devreg/`.
 
-### 5. Tạo database
+### 5. Tạo database & Chạy Migration
 
-**Cách 1: Dùng phpMyAdmin**
-1. Mở trình duyệt, vào `http://localhost/phpmyadmin`
-2. Click **New** (Mới)
-3. Nhập tên database: `barbershop_db`
-4. Chọn **utf8mb4_unicode_ci** trong phần Collation
-5. Click **Create**
-
-**Cách 2: Dùng Terminal (nếu có MySQL CLI)**
-```bash
-mysql -u root -p -e "CREATE DATABASE barbershop_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-```
-
-### 6. Tạo key cho ứng dụng
+Tạo database `barbershop_db` bằng phpMyAdmin hoặc MySQL CLI, sau đó chạy:
 
 ```bash
 php artisan key:generate
+php artisan migrate --seed
 ```
+*(Lệnh `--seed` sẽ tạo sẵn dữ liệu mẫu cho Admin, Barber, Dịch vụ và Khách hàng)*
 
-### 7. Chạy migration (tạo các bảng trong database)
+### 6. Chạy server
 
 ```bash
-php artisan migrate
+php artisan serve
 ```
 
-Kết quả thành công sẽ hiện:
-```
-INFO  Running migrations.
-  0001_01_01_000000_create_users_table ..................... DONE
-  0001_01_01_000001_create_cache_table ..................... DONE
-  0001_01_01_000002_create_jobs_table ...................... DONE
-  2026_05_23_161632_create_personal_access_tokens_table ... DONE
-  2026_05_23_165001_create_barbers_table .................. DONE
-  2026_05_23_165007_create_services_table ................. DONE
-  2026_05_23_165012_create_appointments_table ............. DONE
-```
-
-### 8. (Tùy chọn) Thêm dữ liệu mẫu
-
-Nếu có seeder (dữ liệu mẫu), chạy:
-
-```bash
-php artisan db:seed
-```
-
-Hoặc chạy cả migrate + seed:
-
-```bash
-php artisan migrate:fresh --seed
-```
-
-### 9. Chạy server
-
-```bash
-php artisan serve --port=8080
-```
-
-### 10. Mở trình duyệt
-
-Vào **http://127.0.0.1:8080** để xem trang web.
+Vào **http://127.0.0.1:8000** để xem trang web.
 
 ---
 
-## 📂 Cấu trúc thư mục chính
+## 📂 Cấu trúc dự án nổi bật
 
-```
-laravel-shop/
-├── app/
-│   ├── Http/
-│   │   ├── Controllers/
-│   │   │   ├── DashboardController.php          # Trang tổng quan
-│   │   │   ├── Admin/
-│   │   │   │   ├── BarberController.php         # CRUD Barber (Web)
-│   │   │   │   ├── ServiceController.php        # CRUD Dịch vụ (Web)
-│   │   │   │   └── AppointmentController.php    # CRUD Lịch hẹn (Web)
-│   │   │   ├── Api/
-│   │   │   │   ├── ServiceApiController.php     # Services API
-│   │   │   │   ├── BarberApiController.php      # Barbers API
-│   │   │   │   ├── AppointmentApiController.php # Appointments API
-│   │   │   │   ├── UserApiController.php        # Users API
-│   │   │   │   └── AuthApiController.php        # Auth API (Sanctum)
-│   │   │   └── Auth/
-│   │   │       ├── LoginController.php          # Đăng nhập
-│   │   │       └── RegisterController.php       # Đăng ký
-│   └── Models/
-│       ├── User.php
-│       ├── Barber.php
-│       ├── Service.php
-│       └── Appointment.php
-├── database/
-│   └── migrations/                              # Các file tạo bảng
-├── resources/views/
-│   ├── layouts/app.blade.php                    # Layout chung
-│   ├── dashboard.blade.php                      # Trang tổng quan
-│   ├── barbers/                                 # Views cho Barber
-│   ├── services/                                # Views cho Dịch vụ
-│   ├── appointments/                            # Views cho Lịch hẹn
-│   └── auth/                                    # Views cho Đăng nhập
-└── routes/
-    ├── web.php                                  # Routes Web
-    └── api.php                                  # Routes API
-```
+- `app/Services/PaymentService.php`: Xử lý thuật toán Checksum và tạo URL cho VNPAY.
+- `app/Services/PaymentFlowService.php`: Xử lý luồng tạo thanh toán Cọc và Hóa đơn.
+- `app/Http/Controllers/Api/VnpayController.php`: Xử lý Web Callback (IPN/Return) từ VNPAY.
+- `app/Http/Controllers/Customer/AppointmentController.php`: Luồng đặt lịch, áp dụng mã giảm giá và tính tiền đặt cọc.
+- `app/Http/Controllers/Admin/StatisticController.php`: Xử lý dữ liệu cho biểu đồ thống kê.
+- `resources/views/invoices/pdf.blade.php`: Template xuất file PDF cho hóa đơn.
+- `resources/views/layouts/public.blade.php`: Giao diện khách hàng tích hợp nút Chatbot AI.
 
 ---
 
-## 🔗 Các route chính
+## 🔗 Luồng thử nghiệm Thanh toán (Demo VNPAY)
 
-### Web (Trang quản trị)
+Để chạy demo VNPAY lấy điểm, bạn có thể sử dụng thông tin Thẻ Test sau khi thực hiện thanh toán cọc hoặc thanh toán hóa đơn:
+- **Ngân hàng:** `NCB`
+- **Số thẻ:** `9704198526191432198`
+- **Tên chủ thẻ:** `NGUYEN VAN A`
+- **Ngày phát hành:** `07/15`
+- **Mã OTP:** `123456` (Hoặc nhập bất kỳ)
 
-| Route | Chức năng | Method |
-|-------|-----------|--------|
-| `/` hoặc `/dashboard` | Trang tổng quan | GET |
-| `/barbers` | Danh sách barber | GET |
-| `/barbers/create` | Thêm barber | GET |
-| `/barbers/{id}/edit` | Sửa barber | GET |
-| `/services` | Danh sách dịch vụ | GET |
-| `/services/create` | Thêm dịch vụ | GET |
-| `/appointments` | Danh sách lịch hẹn | GET |
-| `/appointments/create` | Đặt lịch mới | GET |
-| `/login` | Đăng nhập | GET/POST |
-| `/register` | Đăng ký | GET/POST |
+---
 
-### API (RESTful)
-
-| Route | Chức năng | Auth |
-|-------|-----------|------|
-| `POST /api/login` | Đăng nhập | Không |
-| `POST /api/register` | Đăng ký | Không |
-| `GET /api/services` | Danh sách dịch vụ | Không |
-| `GET /api/barbers` | Danh sách barber | Không |
-| `POST /api/logout` | Đăng xuất | Sanctum |
-| `GET /api/user` | Thông tin user | Sanctum |
-| `GET/POST/PUT/DELETE /api/services/*` | CRUD Services | Sanctum |
-| `GET/POST/PUT/DELETE /api/barbers/*` | CRUD Barbers | Sanctum |
-| `GET/POST/PUT/DELETE /api/appointments/*` | CRUD Appointments | Sanctum |
-| `GET/PUT /api/users/*` | Users | Sanctum |
-
-> Test API bằng **Postman**: import các route trên, với các route cần auth thì thêm Header `Authorization: Bearer {token}` (lấy token từ API login/register).
-
-
-
-## 📝 Ghi chú
-
-- Dự án sử dụng **Laravel Framework 13.x**
-- Xác thực API dùng **Laravel Sanctum**
-- Frontend dùng **Bootstrap 5** + **Bootstrap Icons**
-- CSDL: **MySQL** (XAMPP)
+## 📝 Ghi chú Kỹ thuật
+- Dự án áp dụng mô hình thiết kế Service Pattern kết hợp Observer để tách biệt logic nghiệp vụ.
+- Xác thực bảo mật: Middleware Admin, Sanctum API Tokens.
+- Thư viện Frontend: Bootstrap 5, Bootstrap Icons, Chart.js, SweetAlert2.
+- Thư viện Backend: `barryvdh/laravel-dompdf` (PDF), `carbon` (Xử lý thời gian).

@@ -15,6 +15,7 @@ class Barber extends Model
         'bio',
         'avatar',
         'is_active',
+        'working_status',
     ];
 
     protected $casts = [
@@ -38,28 +39,40 @@ class Barber extends Model
     }
 
     /**
-     * Má»™t barber cÃ³ nhiá»u dá»‹ch vá»¥
+     * Một barber có nhiều dịch vụ
      */
     public function services(): HasMany
     {
         return $this->hasMany(Service::class);
     }
 
+    /**
+     * Một barber có nhiều đánh giá
+     */
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
     }
 
+    /**
+     * Một barber có nhiều đơn xin nghỉ phép
+     */
     public function leaveRequests(): HasMany
     {
         return $this->hasMany(LeaveRequest::class);
     }
 
+    /**
+     * Một barber có nhiều bảng lương
+     */
     public function payrolls(): HasMany
     {
         return $this->hasMany(Payroll::class);
     }
 
+    /**
+     * Một barber có nhiều lịch làm việc
+     */
     public function schedules(): HasMany
     {
         return $this->hasMany(BarberSchedule::class);

@@ -4,13 +4,14 @@ use App\Http\Controllers\Admin\AppointmentController;
 use App\Http\Controllers\Admin\BarberController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\ServiceController;
-use App\Http\Controllers\Admin\LeaveRequestController;
 use App\Http\Controllers\Admin\PayrollController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\BarberScheduleController;
+use App\Http\Controllers\Admin\LeaveRequestController as AdminLeaveRequestController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
-use App\Http\Controllers\Barber\DashboardController as BarberDashboardController;
+use App\Http\Controllers\Barber\BarberDashboardController;
+use App\Http\Controllers\Barber\LeaveRequestController as BarberLeaveRequestController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,14 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+// Customer routes - xem lịch hẹn đã đặt
+Route::middleware(['auth'])->prefix('/my')->name('customer.')->group(function () {
+    Route::get('/appointments', [App\Http\Controllers\Customer\AppointmentController::class, 'index'])->name('appointments.index');
+    Route::get('/appointments/{appointment}', [App\Http\Controllers\Customer\AppointmentController::class, 'show'])->name('appointments.show');
+    Route::get('/appointments/{appointment}/deposit', [App\Http\Controllers\Customer\AppointmentController::class, 'deposit'])->name('appointments.deposit');
+    Route::post('/appointments/{appointment}/deposit', [App\Http\Controllers\Customer\AppointmentController::class, 'processDeposit'])->name('appointments.processDeposit');
+});
 
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -79,9 +88,11 @@ Route::middleware(['auth', 'admin'])->prefix('/admin')->name('admin.')->group(fu
         Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy');
     });
 
-    Route::prefix('/leave-requests')->name('leave-requests.')->group(function () {
-        Route::get('/', [LeaveRequestController::class, 'index'])->name('index');
-        Route::patch('/{leaveRequest}/status', [LeaveRequestController::class, 'updateStatus'])->name('updateStatus');
+    Route::prefix('/leave-requests')->name('leave_requests.')->group(function () {
+        Route::get('/', [AdminLeaveRequestController::class, 'index'])->name('index');
+        Route::get('/{leaveRequest}', [AdminLeaveRequestController::class, 'show'])->name('show');
+        Route::post('/{leaveRequest}/approve', [AdminLeaveRequestController::class, 'approve'])->name('approve');
+        Route::post('/{leaveRequest}/reject', [AdminLeaveRequestController::class, 'reject'])->name('reject');
     });
 
     Route::prefix('/payrolls')->name('payrolls.')->group(function () {
@@ -92,6 +103,26 @@ Route::middleware(['auth', 'admin'])->prefix('/admin')->name('admin.')->group(fu
 });
 
 Route::middleware(['auth', 'barber'])->prefix('/barber')->name('barber.')->group(function () {
+    // Dashboard
     Route::get('/dashboard', [BarberDashboardController::class, 'index'])->name('dashboard');
-    Route::post('/toggle-status', [BarberDashboardController::class, 'toggleStatus'])->name('toggleStatus');
+
+    // Lịch hẹn
+    Route::get('/appointments', [BarberDashboardController::class, 'appointments'])->name('appointments');
+    Route::patch('/appointments/{appointment}/status', [BarberDashboardController::class, 'updateAppointmentStatus'])->name('appointments.updateStatus');
+
+    // Hồ sơ cá nhân
+    Route::get('/profile', [BarberDashboardController::class, 'profile'])->name('profile');
+    Route::put('/profile', [BarberDashboardController::class, 'updateProfile'])->name('profile.update');
+
+    // Trạng thái hoạt động
+    Route::patch('/status', [BarberDashboardController::class, 'updateWorkingStatus'])->name('status.update');
+
+    // Đơn xin nghỉ phép
+    Route::prefix('/leave-requests')->name('leave_requests.')->group(function () {
+        Route::get('/', [BarberLeaveRequestController::class, 'index'])->name('index');
+        Route::get('/create', [BarberLeaveRequestController::class, 'create'])->name('create');
+        Route::post('/', [BarberLeaveRequestController::class, 'store'])->name('store');
+        Route::get('/{leaveRequest}', [BarberLeaveRequestController::class, 'show'])->name('show');
+        Route::delete('/{leaveRequest}', [BarberLeaveRequestController::class, 'cancel'])->name('cancel');
+    });
 });

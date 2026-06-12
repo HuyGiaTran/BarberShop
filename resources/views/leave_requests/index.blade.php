@@ -19,7 +19,7 @@
 <div class="card mb-4 border-0 shadow-sm">
     <div class="card-header bg-light fw-bold text-secondary"><i class="bi bi-funnel"></i> Lọc đơn xin nghỉ</div>
     <div class="card-body">
-        <form action="{{ route('admin.leave-requests.index') }}" method="GET" class="row g-3">
+            <form action="{{ route('admin.leave_requests.index') }}" method="GET" class="row g-3">
             <div class="col-md-4">
                 <label for="status" class="form-label small fw-bold">Trạng thái</label>
                 <select class="form-select" id="status" name="status">
@@ -31,7 +31,7 @@
             </div>
             <div class="col-md-4 d-flex align-items-end gap-2">
                 <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Lọc kết quả</button>
-                <a href="{{ route('admin.leave-requests.index') }}" class="btn btn-outline-secondary w-100">Xóa bộ lọc</a>
+                <a href="{{ route('admin.leave_requests.index') }}" class="btn btn-outline-secondary w-100">Xóa bộ lọc</a>
             </div>
         </form>
     </div>
@@ -61,8 +61,8 @@
                             <td class="ps-3 fw-bold">#{{ $req->id }}</td>
                             <td><span class="badge bg-light text-dark border"><i class="bi bi-person-badge"></i> {{ $req->barber->name ?? 'N/A' }}</span></td>
                             <td>
-                                <div><span class="small fw-bold">Từ:</span> {{ $req->start_date->format('d/m/Y') }}</div>
-                                <div><span class="small fw-bold">Đến:</span> {{ $req->end_date->format('d/m/Y') }}</div>
+                                <div><span class="small fw-bold">Từ:</span> {{ $req->start_date ? $req->start_date->format('d/m/Y') : ($req->start_time ? $req->start_time->format('d/m/Y') : 'N/A') }}</div>
+                                <div><span class="small fw-bold">Đến:</span> {{ $req->end_date ? $req->end_date->format('d/m/Y') : ($req->end_time ? $req->end_time->format('d/m/Y') : 'N/A') }}</div>
                             </td>
                             <td>
                                 <span class="d-inline-block text-truncate text-wrap" style="max-width: 250px;">
@@ -78,9 +78,8 @@
                             </td>
                             <td class="pe-3">
                                 @if($req->status == 'pending')
-                                    <form action="{{ route('admin.leave-requests.updateStatus', $req->id) }}" method="POST" class="d-inline">
-                                        @csrf @method('PATCH')
-                                        <input type="hidden" name="status" value="approved">
+                                    <form action="{{ route('admin.leave_requests.approve', $req->id) }}" method="POST" class="d-inline">
+                                        @csrf
                                         <button type="submit" class="btn btn-sm btn-outline-success">Duyệt</button>
                                     </form>
                                     <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ $req->id }}">Từ chối</button>
@@ -89,8 +88,8 @@
                                     <div class="modal fade" id="rejectModal{{ $req->id }}" tabindex="-1" aria-hidden="true">
                                         <div class="modal-dialog">
                                             <div class="modal-content">
-                                                <form action="{{ route('admin.leave-requests.updateStatus', $req->id) }}" method="POST">
-                                                    @csrf @method('PATCH')
+                                                <form action="{{ route('admin.leave_requests.reject', $req->id) }}" method="POST">
+                                                    @csrf
                                                     <input type="hidden" name="status" value="rejected">
                                                     <div class="modal-header">
                                                         <h5 class="modal-title">Từ chối đơn xin nghỉ phép</h5>

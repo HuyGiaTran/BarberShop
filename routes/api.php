@@ -8,6 +8,10 @@ use App\Http\Controllers\Api\UserApiController;
 use App\Http\Controllers\Api\VnpayController;
 use Illuminate\Support\Facades\Route;
 
+// ========================================================================
+// PUBLIC API (Không cần đăng nhập)
+// ========================================================================
+
 Route::post('/login', [AuthApiController::class, 'login']);
 Route::post('/register', [AuthApiController::class, 'register']);
 
@@ -23,6 +27,9 @@ Route::post('/chatbot/ask', [App\Http\Controllers\Api\ChatbotController::class, 
 Route::match(['GET', 'POST'], '/vnpay/callback', [VnpayController::class, 'callback']);
 Route::match(['GET', 'POST'], '/vnpay/ipn', [VnpayController::class, 'ipn']);
 
+// ========================================================================
+// PROTECTED API (Yêu cầu đăng nhập qua Sanctum)
+// ========================================================================
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthApiController::class, 'logout']);
     Route::get('/user', [AuthApiController::class, 'user']);
@@ -48,12 +55,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users/{id}', [UserApiController::class, 'show']);
     Route::put('/users/{id}', [UserApiController::class, 'update']);
 
-    Route::post('/vnpay/create-payment', [VnpayController::class, 'createPayment']);
     Route::post('/reviews', [App\Http\Controllers\Api\ReviewApiController::class, 'store']);
     Route::get('/loyalty', [App\Http\Controllers\Api\LoyaltyApiController::class, 'show']);
     Route::get('/statistics/revenue', [App\Http\Controllers\Api\StatisticApiController::class, 'revenue']);
     Route::get('/statistics/peak-hours', [App\Http\Controllers\Api\StatisticApiController::class, 'peakHours']);
     Route::get('/statistics/services', [App\Http\Controllers\Api\StatisticApiController::class, 'popularServices']);
+
+    // VNPAY - Tạo URL thanh toán
+    Route::post('/vnpay/create-payment', [VnpayController::class, 'createPayment']);
 
     // Barber specific routes
     Route::get('/barber/leave-requests', [App\Http\Controllers\Api\LeaveRequestApiController::class, 'index']);

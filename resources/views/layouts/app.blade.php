@@ -168,55 +168,55 @@
         <ul class="nav flex-column">
             @auth
              <li class="nav-item">
-                <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }} d-block w-100">
                     <i class="bi bi-speedometer2"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{{ route('admin.barbers.index') }}" class="nav-link {{ request()->routeIs('admin.barbers.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.barbers.index') }}" class="nav-link {{ request()->routeIs('admin.barbers.*') ? 'active' : '' }} d-block w-100">
                     <i class="bi bi-people"></i>
                     <span>Quản lý Barber</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{{ route('admin.schedules.index') }}" class="nav-link {{ request()->routeIs('admin.schedules.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.schedules.index') }}" class="nav-link {{ request()->routeIs('admin.schedules.*') ? 'active' : '' }} d-block w-100">
                     <i class="bi bi-calendar-range"></i>
                     <span>Lịch làm việc</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{{ route('admin.services.index') }}" class="nav-link {{ request()->routeIs('admin.services.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.services.index') }}" class="nav-link {{ request()->routeIs('admin.services.*') ? 'active' : '' }} d-block w-100">
                     <i class="bi bi-tag"></i>
                     <span>Quản lý Dịch vụ</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{{ route('admin.appointments.index') }}" class="nav-link {{ request()->routeIs('admin.appointments.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.appointments.index') }}" class="nav-link {{ request()->routeIs('admin.appointments.*') ? 'active' : '' }} d-block w-100">
                     <i class="bi bi-calendar-check"></i>
                     <span>Lịch hẹn</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{{ route('admin.invoices.index') }}" class="nav-link {{ request()->routeIs('admin.invoices.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.invoices.index') }}" class="nav-link {{ request()->routeIs('admin.invoices.*') ? 'active' : '' }} d-block w-100">
                     <i class="bi bi-receipt"></i>
                     <span>Hóa đơn</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{{ route('admin.reviews.index') }}" class="nav-link {{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.reviews.index') }}" class="nav-link {{ request()->routeIs('admin.reviews.*') ? 'active' : '' }} d-block w-100">
                     <i class="bi bi-star"></i>
                     <span>Quản lý Đánh giá</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{{ route('admin.leave-requests.index') }}" class="nav-link {{ request()->routeIs('admin.leave-requests.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.leave_requests.index') }}" class="nav-link {{ request()->routeIs('admin.leave_requests.*') ? 'active' : '' }} d-block w-100">
                     <i class="bi bi-envelope-paper"></i>
                     <span>Nghỉ phép</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{{ route('admin.payrolls.index') }}" class="nav-link {{ request()->routeIs('admin.payrolls.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.payrolls.index') }}" class="nav-link {{ request()->routeIs('admin.payrolls.*') ? 'active' : '' }} d-block w-100">
                     <i class="bi bi-cash-coin"></i>
                     <span>Bảng lương</span>
                 </a>

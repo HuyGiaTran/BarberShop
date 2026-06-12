@@ -152,40 +152,37 @@
                             <li class="nav-item">
                                 <a class="nav-link click-scroll" href="#section_4">Price List</a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link click-scroll" href="#section_5">Contact</a>
-                            </li>
+                            
                             @auth
-                            @if(Auth::user()->role === 'admin')
-                            <li class="nav-item mt-4 pt-3" style="border-top: 1px solid rgba(0,0,0,0.1);">
-                                <a class="nav-link" href="{{ route('dashboard') }}" style="color: var(--secondary-color);">
-                                    <i class="bi bi-speedometer2 me-2"></i>Dashboard
-                                </a>
-                            </li>
-                            @endif
-                            <li class="nav-item" style="border-top: 1px solid rgba(0,0,0,0.1);">
-                                <form method="POST" action="{{ route('logout') }}" id="logoutForm">
-                                    @csrf
-                                    <button type="submit" class="nav-link w-100 text-start border-0 bg-transparent"
-                                        style="font-size: 16px; color: var(--dark-color);"
-                                        onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
-                                        <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
-                                    </button>
-                                </form>
-                            </li>
+                                @if(Auth::user()->role === 'customer')
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('customer.appointments.index') }}">
+                                        <i class="bi bi-calendar-check me-2"></i>My Schedules
+                                    </a>
+                                </li>
+                                @endif
+                                <li class="nav-item" style="border-top: 1px solid rgba(0,0,0,0.1);">
+                                    <form method="POST" action="{{ route('logout') }}" id="logoutForm">
+                                        @csrf
+                                        <button type="submit" class="nav-link w-100 text-start border-0 bg-transparent"
+                                            style="font-size: 16px; color: var(--dark-color);"
+                                            onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
+                                            <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                                        </button>
+                                    </form>
+                                </li>
+                            @else
+                                <li class="nav-item mt-4 pt-3" style="border-top: 1px solid rgba(0,0,0,0.1);">
+                                    <a class="nav-link" href="{{ route('login') }}" style="font-size: 16px;">
+                                        <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('register') }}" style="font-size: 16px;">
+                                        <i class="bi bi-person-plus me-2"></i>Đăng ký
+                                    </a>
+                                </li>
                             @endauth
-                            @guest
-                            <li class="nav-item mt-4 pt-3" style="border-top: 1px solid rgba(0,0,0,0.1);">
-                                <a class="nav-link" href="{{ route('login') }}" style="font-size: 16px;">
-                                    <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('register') }}" style="font-size: 16px;">
-                                    <i class="bi bi-person-plus me-2"></i>Đăng ký
-                                </a>
-                            </li>
-                            @endguest
                         </ul>
                     </div>
                 </nav>

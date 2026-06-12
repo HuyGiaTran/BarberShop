@@ -40,8 +40,9 @@ class AppointmentService
                 ->first();
 
             if ($schedule) {
-                if ($schedule->is_off) {
-                    return []; // Nghỉ làm
+                // Kiểm tra schedule có bị block không (nghỉ phép, bận)
+                if ($schedule->is_off || !$schedule->is_available) {
+                    return []; // Nghỉ làm hoặc bị block
                 }
 
                 $start = Carbon::parse($schedule->start_time);
@@ -51,6 +52,19 @@ class AppointmentService
                 $startMin = $start->minute;
                 $endHour = $end->hour;
                 $endMin = $end->minute;
+            }
+            
+            // Kiểm tra nếu có schedule bị block theo specific_date cho ngày này
+            $blockedSchedules = BarberSchedule::where('barber_id', $barberId)
+                ->where('specific_date', $date->format('Y-m-d'))
+                ->where(function ($q) {
+                    $q->where('is_off', true)
+                      ->orWhere('is_available', false);
+                })
+                ->get();
+                
+            if ($blockedSchedules->isNotEmpty()) {
+                return []; // Có schedule bị block trong ngày này
             }
         }
 

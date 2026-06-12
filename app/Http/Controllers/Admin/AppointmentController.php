@@ -77,6 +77,7 @@ class AppointmentController extends Controller
             ]);
         }
 
+        // Kiểm tra barber có đang nghỉ phép không
         if ($this->appointmentService->isBarberOnApprovedLeave(
             (int) $validated['barber_id'],
             $validated['appointment_date']
@@ -86,6 +87,7 @@ class AppointmentController extends Controller
             ]);
         }
 
+        // Kiểm tra trùng lịch
         $isOverlapping = $this->appointmentService->hasConflict(
             (int) $validated['barber_id'],
             $validated['appointment_date'],
@@ -150,15 +152,22 @@ class AppointmentController extends Controller
             ]);
         }
 
-        if ($this->appointmentService->isBarberOnApprovedLeave(
-            (int) $validated['barber_id'],
-            $validated['appointment_date']
-        )) {
-            return back()->withInput()->withErrors([
-                'appointment_date' => 'Barber nay dang nghi phep trong ngay duoc chon.',
-            ]);
+        // Chỉ kiểm tra nghỉ phép nếu barber, ngày hoặc giờ thay đổi
+        if ($validated['barber_id'] != $appointment->barber_id ||
+            $validated['appointment_date'] != $appointment->appointment_date->format('Y-m-d') ||
+            $validated['appointment_time'] != $appointment->appointment_time) {
+
+            if ($this->appointmentService->isBarberOnApprovedLeave(
+                (int) $validated['barber_id'],
+                $validated['appointment_date']
+            )) {
+                return back()->withInput()->withErrors([
+                    'appointment_date' => 'Barber nay dang nghi phep trong ngay duoc chon.',
+                ]);
+            }
         }
 
+        // Kiểm tra trùng lịch
         $isOverlapping = $this->appointmentService->hasConflict(
             (int) $validated['barber_id'],
             $validated['appointment_date'],

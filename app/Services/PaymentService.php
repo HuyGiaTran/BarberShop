@@ -27,6 +27,11 @@ class PaymentService
 
     public function createPaymentUrlForPayment(Payment $payment, array $options = []): string
     {
+        // VNPAY requires a unique TxnRef for every payment attempt, even if the previous one failed or was abandoned.
+        // We regenerate the gateway_txn_ref to ensure it's always unique on every redirect.
+        $newTxnRef = $this->buildGatewayTxnRef($payment->isDeposit() ? 'DEP' : 'INV');
+        $payment->update(['gateway_txn_ref' => $newTxnRef]);
+
         return $this->buildPaymentUrl(
             (float) $payment->amount,
             (string) $payment->gateway_txn_ref,

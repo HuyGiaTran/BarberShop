@@ -134,6 +134,16 @@
                         <td>Tổng giá dịch vụ</td>
                         <td>{{ number_format($bookingTotalPrice, 0, ',', '.') }}đ</td>
                     </tr>
+                    @if($bookingTotalDiscount > 0)
+                        <tr>
+                            <td>Giảm giá (Mã: {{ $bookingPromoCode }})</td>
+                            <td class="text-danger">-{{ number_format($bookingTotalDiscount, 0, ',', '.') }}đ</td>
+                        </tr>
+                        <tr>
+                            <td>Thành tiền</td>
+                            <td><strong>{{ number_format($bookingTotalPrice - $bookingTotalDiscount, 0, ',', '.') }}đ</strong></td>
+                        </tr>
+                    @endif
                     <tr>
                         <td>Tổng thời lượng</td>
                         <td>{{ $bookingTotalDuration }} phút</td>
@@ -173,9 +183,12 @@
 
                 <div class="mt-4 d-flex flex-wrap gap-2">
                     @if(!$showPaymentPanel && $canDeposit)
-                        <a href="{{ route('customer.appointments.deposit', $appointment) }}" class="btn-gold">
-                            <i class="bi bi-qr-code-scan"></i> Xem QR đặt cọc
-                        </a>
+                        <form method="POST" action="{{ route('customer.appointments.processDeposit', $appointment) }}" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn-gold">
+                                <i class="bi bi-credit-card-2-front"></i> Thanh toán cọc qua VNPAY
+                            </button>
+                        </form>
                     @endif
 
                     @if($canCancel)
@@ -191,6 +204,7 @@
                     @if($appointment->status === 'completed')
                         @php
                             $hasReviewed = \App\Models\Review::where('appointment_id', $appointment->id)->exists();
+                            $hasInvoice = $appointment->invoice()->exists();
                         @endphp
                         @if(!$hasReviewed)
                             <button type="button" class="btn-gold" data-bs-toggle="modal" data-bs-target="#reviewModal">
@@ -200,6 +214,12 @@
                             <button type="button" class="btn btn-secondary" disabled>
                                 <i class="bi bi-check-circle"></i> Đã đánh giá
                             </button>
+                        @endif
+                        
+                        @if($hasInvoice)
+                            <a href="{{ route('customer.appointments.invoice-pdf', $appointment) }}" class="btn-gold" target="_blank" style="background:#444;color:#fff;border:none;">
+                                <i class="bi bi-file-earmark-pdf"></i> Tải Hóa đơn (PDF)
+                            </a>
                         @endif
                     @endif
                 </div>
@@ -278,68 +298,28 @@
                     <div class="payment-box">
                         <p class="mb-2"><strong>Số tiền cọc:</strong> {{ number_format($depositAmount ?? 50000, 0, ',', '.') }}đ</p>
                         <p class="mb-2"><strong>Phạm vi áp dụng:</strong> Khoản cọc này áp dụng cho toàn bộ lượt hẹn <strong>{{ $bookingReference }}</strong>, không phải từng dịch vụ riêng lẻ.</p>
-                        <p class="mb-0"><strong>Lưu ý quan trọng:</strong> Sau khi admin xác nhận đã nhận cọc, lịch hẹn sẽ chuyển sang trạng thái xác nhận và không thể hủy online nữa.</p>
-                    </div>
-
-                    <div class="payment-note mt-3">
-                        <i class="bi bi-info-circle me-1"></i>
-                        Quét mã QR bên dưới bằng app ngân hàng để chuyển khoản đúng số tiền cọc. Nội dung chuyển khoản phải giữ nguyên để cửa hàng đối soát nhanh hơn.
-                    </div>
-
-                    @if($transferConfigured && $transferQrUrl)
-                        <div class="qr-card mt-3">
-                            <div class="mb-3 fw-bold">Mã QR chuyển khoản đặt cọc</div>
-                            <img src="{{ $transferQrUrl }}" alt="QR chuyển khoản đặt cọc">
-                            <div class="small text-muted mt-3">
-                                Nếu app ngân hàng không nhận QR, bạn vẫn có thể chuyển tay theo thông tin tài khoản bên dưới.
-                            </div>
-                        </div>
-                    @else
-                        <div class="warning-note mt-3">
-                            <i class="bi bi-exclamation-circle me-1"></i>
-                            Cửa hàng chưa cấu hình tài khoản nhận cọc trong file môi trường, nên chưa thể hiển thị mã QR thật.
-                        </div>
-                    @endif
-
-                    <div class="transfer-grid">
-                        <div class="transfer-item">
-                            <div class="label">Ngân hàng</div>
-                            <div class="value">{{ $transferBankName ?: 'Chưa cấu hình' }}</div>
-                        </div>
-                        <div class="transfer-item">
-                            <div class="label">Số tài khoản</div>
-                            <div class="value">{{ $transferBankAccount ?: 'Chưa cấu hình' }}</div>
-                        </div>
-                        <div class="transfer-item">
-                            <div class="label">Chủ tài khoản</div>
-                            <div class="value">{{ $transferAccountName ?: 'Chưa cấu hình' }}</div>
-                        </div>
-                        <div class="transfer-item">
-                            <div class="label">Nội dung chuyển khoản</div>
-                            <div class="value">{{ $transferContent }}</div>
-                        </div>
+                        <p class="mb-0"><strong>Lưu ý quan trọng:</strong> Sau khi thanh toán cọc thành công, lịch hẹn sẽ chuyển sang trạng thái xác nhận và không thể hủy online nữa.</p>
                     </div>
 
                     <div class="mt-3 d-flex gap-2 flex-wrap">
                         <form method="POST" action="{{ route('customer.appointments.processDeposit', $appointment) }}">
                             @csrf
-                            <button type="submit" class="btn-gold" {{ !$transferConfigured ? 'disabled' : '' }}>
-                                <i class="bi bi-check2-circle"></i> Tôi đã chuyển khoản, nhờ shop xác nhận
+                            <button type="submit" class="btn-gold">
+                                <i class="bi bi-credit-card-2-front"></i> Thanh toán qua VNPAY Sandbox
                             </button>
                         </form>
-                        <a href="{{ route('customer.appointments.show', $appointment) }}" class="btn-outline">Quay lại chi tiết</a>
                     </div>
                 </div>
             </div>
         @elseif($depositState === 'awaiting_confirmation')
             <div class="warning-note">
                 <i class="bi bi-hourglass-split me-1"></i>
-                Khoản cọc của bạn đang chờ cửa hàng xác nhận. Tạm thời bạn chưa thể hủy online hoặc gửi lại yêu cầu thanh toán.
+                Khoản cọc của bạn đang được xử lý. Xin vui lòng đợi trong giây lát.
             </div>
         @elseif($hasPaidDeposit)
             <div class="warning-note">
                 <i class="bi bi-shield-lock me-1"></i>
-                Lượt hẹn này đã thanh toán cọc. Bạn không thể hủy online. Nếu cần đổi lịch hoặc hỗ trợ thêm, vui lòng liên hệ cửa hàng.
+                Lượt hẹn này đã thanh toán cọc qua VNPAY. Bạn không thể hủy online. Nếu cần đổi lịch hoặc hỗ trợ thêm, vui lòng liên hệ cửa hàng.
             </div>
         @endif
     </div>

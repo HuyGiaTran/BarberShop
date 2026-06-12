@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\PayrollController;
 use App\Http\Controllers\Admin\ReviewController;
+use App\Http\Controllers\Admin\StatisticController;
 use App\Http\Controllers\Admin\BarberScheduleController;
 use App\Http\Controllers\Admin\LeaveRequestController as AdminLeaveRequestController;
 use App\Http\Controllers\Auth\LoginController;
@@ -32,6 +33,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::middleware(['auth'])->prefix('/my')->name('customer.')->group(function () {
     Route::get('/appointments', [App\Http\Controllers\Customer\AppointmentController::class, 'index'])->name('appointments.index');
     Route::get('/appointments/{appointment}', [App\Http\Controllers\Customer\AppointmentController::class, 'show'])->name('appointments.show');
+    Route::get('/appointments/{appointment}/invoice-pdf', [App\Http\Controllers\Customer\AppointmentController::class, 'downloadInvoicePdf'])->name('appointments.invoice-pdf');
     Route::get('/appointments/{appointment}/deposit', [App\Http\Controllers\Customer\AppointmentController::class, 'deposit'])->name('appointments.deposit');
     Route::post('/appointments/{appointment}/deposit', [App\Http\Controllers\Customer\AppointmentController::class, 'processDeposit'])->name('appointments.processDeposit');
     Route::delete('/appointments/{appointment}', [App\Http\Controllers\Customer\AppointmentController::class, 'cancel'])->name('appointments.cancel');
@@ -82,6 +84,7 @@ Route::middleware(['auth', 'admin'])->prefix('/admin')->name('admin.')->group(fu
 
     Route::prefix('/invoices')->name('invoices.')->group(function () {
         Route::get('/', [InvoiceController::class, 'index'])->name('index');
+        Route::get('/{invoice}/pdf', [InvoiceController::class, 'downloadPdf'])->name('pdf');
         Route::patch('/{invoice}/mark-cash-paid', [InvoiceController::class, 'markCashPaid'])->name('markCashPaid');
     });
 
@@ -107,6 +110,10 @@ Route::middleware(['auth', 'admin'])->prefix('/admin')->name('admin.')->group(fu
         Route::get('/', [PayrollController::class, 'index'])->name('index');
         Route::post('/calculate', [PayrollController::class, 'calculate'])->name('calculate');
         Route::patch('/{payroll}/mark-paid', [PayrollController::class, 'markPaid'])->name('markPaid');
+    });
+
+    Route::prefix('/statistics')->name('statistics.')->group(function () {
+        Route::get('/', [StatisticController::class, 'index'])->name('index');
     });
 });
 

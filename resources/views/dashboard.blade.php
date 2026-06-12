@@ -89,7 +89,7 @@
                                     <tr>
                                         <td>{{ $appointment->user->name ?? 'N/A' }}</td>
                                         <td>{{ $appointment->barber->name ?? 'N/A' }}</td>
-                                        <td>{{ $appointment->service->name ?? 'N/A' }}</td>
+                                        <td>{{ $appointment->display_service_name ?? $appointment->service->name ?? 'N/A' }}</td>
                                         
                                         <td>
                                             {{ $appointment->appointment_date ? $appointment->appointment_date->format('d-m-Y') : 'N/A' }} 
@@ -134,10 +134,12 @@
         <div class="col-lg-7">
             <div class="card h-100">
                 <div class="card-header">
-                    <i class="bi bi-bar-chart-line me-2"></i>Lịch hẹn 7 ngày gần nhất
+                    <i class="bi bi-bar-chart-line me-2"></i>Lịch hẹn theo ngày trong tháng {{ $dashboardMonthLabel ?? now()->format('m/Y') }}
                 </div>
                 <div class="card-body">
-                    <canvas id="appointmentsByDayChart" height="150"></canvas>
+                    <div style="position: relative; height: 250px; width: 100%;">
+                        <canvas id="appointmentsByDayChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -145,10 +147,13 @@
         <div class="col-lg-5">
             <div class="card h-100">
                 <div class="card-header">
-                    <i class="bi bi-pie-chart me-2"></i>Tỷ lệ trạng thái lịch hẹn
+                    <i class="bi bi-pie-chart me-2"></i>Tỷ lệ trạng thái lịch hẹn tháng {{ $dashboardMonthLabel ?? now()->format('m/Y') }}
                 </div>
                 <div class="card-body">
-                    <canvas id="appointmentStatusChart" height="150"></canvas>
+                    <div style="position: relative; height: 200px; width: 100%;">
+                        <canvas id="appointmentStatusChart"></canvas>
+                    </div>
+                    <p id="appointmentStatusNote" class="text-center text-muted small mt-3 mb-0"></p>
                 </div>
             </div>
         </div>
@@ -158,10 +163,12 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <i class="bi bi-stars me-2"></i>Top 5 dịch vụ phổ biến
+                    <i class="bi bi-stars me-2"></i>Top 5 dịch vụ phổ biến tháng {{ $dashboardMonthLabel ?? now()->format('m/Y') }}
                 </div>
                 <div class="card-body">
-                    <canvas id="popularServicesChart" height="120"></canvas>
+                    <div style="position: relative; height: 200px; width: 100%;">
+                        <canvas id="popularServicesChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -179,6 +186,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusData = @json($statusChartData ?? []);
     const serviceLabels = @json($popularServiceLabels ?? []);
     const serviceData = @json($popularServiceData ?? []);
+    const statusColors = [
+        'rgba(253, 203, 110, 0.85)',
+        'rgba(9, 132, 227, 0.85)',
+        'rgba(0, 184, 148, 0.85)',
+        'rgba(214, 48, 49, 0.85)',
+    ];
+
+    const formatPercentage = (value) => {
+        const normalized = Number(value) || 0;
+
+        if (Number.isInteger(normalized)) {
+            return `${normalized}%`;
+        }
+
+        return `${normalized.toFixed(1)}%`;
+    };
 
     const appointmentsByDayCanvas = document.getElementById('appointmentsByDayChart');
     if (appointmentsByDayCanvas) {
@@ -217,19 +240,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const appointmentStatusCanvas = document.getElementById('appointmentStatusChart');
     if (appointmentStatusCanvas) {
+        const totalStatuses = statusData.reduce((sum, value) => sum + Number(value || 0), 0);
+        const statusPercentages = statusData.map((value) => {
+            if (!totalStatuses) {
+                return 0;
+            }
+
+            return Number((((Number(value) || 0) / totalStatuses) * 100).toFixed(1));
+        });
+
+        const appointmentStatusNote = document.getElementById('appointmentStatusNote');
+
+        if (appointmentStatusNote) {
+            appointmentStatusNote.textContent = statusLabels.map((label, index) => (
+                `${label}: ${formatPercentage(statusPercentages[index] ?? 0)}`
+            )).join(' • ');
+        }
+
         new Chart(appointmentStatusCanvas, {
             type: 'doughnut',
             data: {
                 labels: statusLabels,
                 datasets: [{
                     data: statusData,
-                    backgroundColor: [
-                        'rgba(253, 203, 110, 0.85)',
-                        'rgba(9, 132, 227, 0.85)',
-                        'rgba(0, 184, 148, 0.85)',
-                        'rgba(214, 48, 49, 0.85)',
-                    ],
+                    backgroundColor: statusColors,
                     borderWidth: 0,
+                    hoverOffset: 10,
                 }]
             },
             options: {
@@ -238,6 +274,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 plugins: {
                     legend: {
                         position: 'bottom',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label(context) {
+                                const percentage = statusPercentages[context.dataIndex] ?? 0;
+                                const count = statusData[context.dataIndex] ?? 0;
+
+                                return `${context.label}: ${count} lịch (${formatPercentage(percentage)})`;
+                            }
+                        }
                     }
                 }
             }

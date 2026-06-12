@@ -256,9 +256,15 @@
                                 <div class="col-lg-6 col-12">
                                     <input type="date" name="appointment_date" id="bb-date" class="form-control" placeholder="Ngày hẹn" min="{{ now()->toDateString() }}" required>
                                 </div>
+                            <div class="row">
+                                <div class="col-lg-6 col-12">
+                                    <textarea name="notes" rows="3" class="form-control" id="bb-message" placeholder="Ghi chú (Không bắt buộc)"></textarea>
+                                </div>
+                                <div class="col-lg-6 col-12">
+                                    <input type="text" name="promo_code" class="form-control h-100" id="bb-promo" placeholder="Mã giảm giá (Tùy chọn)">
+                                </div>
                             </div>
-                            <textarea name="notes" rows="3" class="form-control" id="bb-message" placeholder="Ghi chú (Không bắt buộc)"></textarea>
-                            <div class="col-lg-4 col-md-10 col-8 mx-auto">
+                            <div class="col-lg-4 col-md-10 col-8 mx-auto mt-4">
                                 <button type="submit" class="form-control">Xác nhận đặt lịch</button>
                             </div>
                         </div>
@@ -319,7 +325,7 @@
                                             <div class="col-lg-4 col-md-6 col-12">
                                                 <div class="border rounded-3 p-3 h-100 bg-white">
                                                     <div class="fw-bold text-dark">+{{ number_format($log['points']) }} điểm</div>
-                                                    <div class="small text-muted mt-1">{{ $log['note'] }}</div>
+                                                    <div class="small text-muted mt-1">{{ preg_replace('/ từ hóa đơn #\d+/i', '', $log['note']) }}</div>
                                                     <div class="small text-muted mt-2">Số dư: {{ number_format($log['balance_after']) }} điểm</div>
                                                 </div>
                                             </div>
@@ -416,7 +422,6 @@
                 <div class="col-lg-4 col-md-6 col-12 mb-4">
                     <div class="card border-0 shadow-sm h-100 p-4" style="border-radius: 15px;">
                         <div class="d-flex align-items-center mb-3">
-                            <img src="{{ $review->user->avatar ? asset('storage/'.$review->user->avatar) : asset('images/default-avatar.png') }}" alt="Avatar" class="rounded-circle me-3" width="50" height="50" style="object-fit: cover;">
                             <div>
                                 <h6 class="mb-0 fw-bold">{{ $review->user->name ?? 'Khách hàng' }}</h6>
                                 <div class="text-warning small">

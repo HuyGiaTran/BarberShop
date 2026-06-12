@@ -11,21 +11,48 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $totalAppointments = Appointment::count();
-        $pendingAppointments = Appointment::where('status', 'pending')->count();
+        $currentMonthStart = Carbon::today()->startOfMonth();
+        $currentMonthEnd = Carbon::today()->endOfMonth();
+        $dashboardMonthLabel = $currentMonthStart->format('m/Y');
+
+        $totalAppointments = Appointment::query()->primaryBookings()->count();
+        $pendingAppointments = Appointment::query()->primaryBookings()->where('status', 'pending')->count();
         $totalBarbers = Barber::count();
         $totalServices = Service::count();
 
-        $recentAppointments = Appointment::with(['user', 'barber', 'service'])
+        $recentAppointments = Appointment::query()
+            ->primaryBookings()
+            ->with(['user', 'barber', 'service'])
             ->orderByDesc('appointment_date')
             ->orderByDesc('appointment_time')
             ->take(10)
             ->get();
 
-        $days = collect(range(6, 0))
-            ->map(fn (int $daysAgo) => Carbon::today()->subDays($daysAgo));
+        $recentBookingServices = Appointment::query()
+            ->with('service:id,name')
+            ->whereIn('booking_reference', $recentAppointments->pluck('booking_reference')->filter()->unique())
+            ->orderBy('booking_sequence')
+            ->get()
+            ->groupBy('booking_reference');
 
-        $appointmentsByDay = Appointment::whereBetween('appointment_date', [
+        $recentAppointments->each(function (Appointment $appointment) use ($recentBookingServices): void {
+            $bookingAppointments = $recentBookingServices->get($appointment->booking_reference) ?? collect([$appointment]);
+            $comboLabel = Appointment::resolveComboLabelForServices($bookingAppointments);
+            $serviceNames = $bookingAppointments->pluck('service.name')->filter()->unique()->values();
+
+            $appointment->setAttribute(
+                'display_service_name',
+                $comboLabel
+                    ?? ($serviceNames->count() === 1 ? (string) $serviceNames->first() : $serviceNames->implode(' + '))
+            );
+        });
+
+        $days = collect(range(0, $currentMonthStart->daysInMonth - 1))
+            ->map(fn (int $offset) => $currentMonthStart->copy()->addDays($offset));
+
+        $appointmentsByDay = Appointment::query()
+            ->primaryBookings()
+            ->whereBetween('appointment_date', [
                 $days->first()->toDateString(),
                 $days->last()->toDateString(),
             ])
@@ -43,7 +70,13 @@ class DashboardController extends Controller
             ->values();
 
         $statusOrder = ['pending', 'confirmed', 'completed', 'cancelled'];
-        $statusCounts = Appointment::selectRaw('status, COUNT(*) as count')
+        $statusCounts = Appointment::query()
+            ->primaryBookings()
+            ->whereBetween('appointment_date', [
+                $currentMonthStart->toDateString(),
+                $currentMonthEnd->toDateString(),
+            ])
+            ->selectRaw('status, COUNT(*) as count')
             ->groupBy('status')
             ->pluck('count', 'status');
 
@@ -61,13 +94,26 @@ class DashboardController extends Controller
             ->map(fn (string $status) => (int) ($statusCounts[$status] ?? 0))
             ->values();
 
-        $popularServices = Service::withCount('appointments')
-            ->orderByDesc('appointments_count')
+        $popularServices = Appointment::query()
+            ->whereBetween('appointment_date', [
+                $currentMonthStart->toDateString(),
+                $currentMonthEnd->toDateString(),
+            ])
+            ->where('status', '!=', 'cancelled')
+            ->selectRaw('service_id, COUNT(*) as bookings_count')
+            ->with('service:id,name')
+            ->groupBy('service_id')
+            ->orderByDesc('bookings_count')
             ->take(5)
             ->get();
 
-        $popularServiceLabels = $popularServices->pluck('name')->values();
-        $popularServiceData = $popularServices->pluck('appointments_count')->map(fn ($count) => (int) $count)->values();
+        $popularServiceLabels = $popularServices
+            ->map(fn (Appointment $appointment) => $appointment->service?->name ?? 'N/A')
+            ->values();
+        $popularServiceData = $popularServices
+            ->pluck('bookings_count')
+            ->map(fn ($count) => (int) $count)
+            ->values();
 
         return view('dashboard', compact(
             'totalAppointments',
@@ -75,6 +121,7 @@ class DashboardController extends Controller
             'totalBarbers',
             'totalServices',
             'recentAppointments',
+            'dashboardMonthLabel',
             'appointmentChartLabels',
             'appointmentChartData',
             'statusChartLabels',

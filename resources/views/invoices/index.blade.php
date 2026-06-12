@@ -159,6 +159,9 @@
                                         @else
                                             <span class="text-muted small">Đã hoàn tất thanh toán</span>
                                         @endif
+                                        <a href="{{ route('admin.invoices.pdf', $invoice) }}" class="btn btn-sm btn-outline-secondary" target="_blank">
+                                            <i class="bi bi-file-earmark-pdf"></i> Tải PDF
+                                        </a>
                                     </div>
                                 </td>
                             </tr>

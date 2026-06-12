@@ -33,10 +33,14 @@ class AppointmentObserver
 
         $appointment->loadMissing('service');
 
+        $basePrice = $appointment->service?->price ?? 0;
+        $discountAmount = $appointment->discount_amount ?? 0;
+        $finalAmount = max(0, $basePrice - $discountAmount);
+
         Invoice::create([
             'appointment_id' => $appointment->id,
             'user_id' => $appointment->user_id,
-            'total_amount' => $appointment->service?->price ?? 0,
+            'total_amount' => $finalAmount,
             'payment_method' => 'cash',
             'payment_status' => 'unpaid',
             'transaction_id' => null,

@@ -8,6 +8,7 @@ use App\Services\PaymentFlowService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
 {
@@ -77,5 +78,13 @@ class InvoiceController extends Controller
         $this->paymentFlowService->markInvoiceAsPaid($invoice, 'cash');
 
         return back()->with('success', 'Da cap nhat hoa don sang trang thai da thu tien mat.');
+    }
+
+    public function downloadPdf(Invoice $invoice)
+    {
+        $invoice->loadMissing(['user', 'appointment.barber', 'appointment.service']);
+
+        $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
+        return $pdf->download('hoa_don_' . $invoice->id . '.pdf');
     }
 }

@@ -13,6 +13,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AppointmentController extends Controller
 {
@@ -79,6 +80,21 @@ class AppointmentController extends Controller
         ));
     }
 
+    public function downloadInvoicePdf(Appointment $appointment)
+    {
+        $this->ensureCustomer();
+        $this->authorizeCustomerAppointment($appointment);
+
+        $invoice = $appointment->invoice()->with(['user', 'appointment.barber', 'appointment.service'])->first();
+
+        if (!$invoice) {
+            return back()->with('error', 'Không tìm thấy hóa đơn cho lịch hẹn này.');
+        }
+
+        $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
+        return $pdf->download('hoa_don_' . $invoice->id . '.pdf');
+    }
+
     public function deposit(Appointment $appointment): RedirectResponse|View
     {
         $this->ensureCustomer();
@@ -127,11 +143,19 @@ class AppointmentController extends Controller
         }
 
         $payment = $this->paymentFlowService->createDepositPayment($bookingAppointments, $request->user());
-        $this->paymentFlowService->markDepositAsAwaitingConfirmation($payment);
+        
+        try {
+            $paymentUrl = app(\App\Services\PaymentService::class)->createPaymentUrlForPayment($payment, [
+                'ip_addr' => $request->ip(),
+            ]);
 
-        return redirect()
-            ->route('customer.appointments.show', $primaryAppointment)
-            ->with('success', 'Đã ghi nhận yêu cầu xác nhận chuyển khoản. Cửa hàng sẽ kiểm tra và xác nhận cọc cho bạn sớm nhất.');
+            return redirect()->away($paymentUrl);
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('customer.appointments.show', $primaryAppointment)
+                ->with('error', 'Lỗi tạo giao dịch VNPAY: ' . $e->getMessage());
+        }
+
     }
 
     public function cancel(Appointment $appointment): RedirectResponse
@@ -231,6 +255,8 @@ class AppointmentController extends Controller
                 ?? ($serviceNames->count() === 1 ? (string) $serviceNames->first() : $serviceNames->implode(' + ')),
             'is_combo' => $comboLabel !== null,
             'total_price' => (float) $appointments->sum(fn (Appointment $appointment) => (float) ($appointment->service?->price ?? 0)),
+            'total_discount' => (float) $appointments->sum(fn (Appointment $appointment) => (float) ($appointment->discount_amount ?? 0)),
+            'promo_code' => $appointments->firstWhere('promo_code', '!=', null)?->promo_code,
             'total_duration' => (int) $appointments->sum(fn (Appointment $appointment) => (int) ($appointment->service?->duration_minutes ?? 0)),
             'deposit_amount' => (float) ($primary->deposit_amount ?: 50000),
             'deposit_state' => $this->resolveDepositState($appointments),
@@ -263,6 +289,8 @@ class AppointmentController extends Controller
             'bookingDisplayName' => $summary['display_service_name'],
             'bookingIsCombo' => $summary['is_combo'],
             'bookingTotalPrice' => $summary['total_price'],
+            'bookingTotalDiscount' => $summary['total_discount'],
+            'bookingPromoCode' => $summary['promo_code'],
             'bookingTotalDuration' => $summary['total_duration'],
             'depositAmount' => $showPaymentPanel ? $summary['deposit_amount'] : null,
             'depositState' => $summary['deposit_state'],

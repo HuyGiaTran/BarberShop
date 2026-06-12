@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\AppointmentService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
@@ -24,6 +25,8 @@ class Appointment extends Model
         'appointment_time',
         'status',
         'notes',
+        'promo_code',
+        'discount_amount',
         'deposit_amount',
         'deposit_status',
         'deposit_paid_at',
@@ -45,6 +48,11 @@ class Appointment extends Model
                 ? (strlen($value) === 5 ? "{$value}:00" : $value)
                 : null,
         );
+    }
+
+    public function scopePrimaryBookings(Builder $query): Builder
+    {
+        return $query->where('is_booking_primary', true);
     }
 
     public function user(): BelongsTo

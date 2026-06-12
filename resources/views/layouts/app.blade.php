@@ -227,6 +227,12 @@
                     <span>Bảng lương</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.statistics.index') }}" class="nav-link {{ request()->routeIs('admin.statistics.*') ? 'active' : '' }} d-block w-100">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <span>Thống kê</span>
+                </a>
+            </li>
             <li class="nav-item mt-4">
                 <hr style="border-color: rgba(255,255,255,0.1); margin: 10px 20px;">
             </li>

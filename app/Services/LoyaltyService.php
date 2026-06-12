@@ -60,7 +60,7 @@ class LoyaltyService
                 'source_id' => $invoice->id,
                 'points' => $pointsEarned,
                 'balance_after' => $program->points,
-                'note' => sprintf('Cộng điểm từ hóa đơn #%d', $invoice->id),
+                'note' => 'Cộng điểm thưởng từ lượt hẹn',
             ]);
         });
     }

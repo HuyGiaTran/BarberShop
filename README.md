@@ -4,7 +4,7 @@
 **Hệ thống Quản lý Tiệm Cắt Tóc Thế Hệ Mới - Đột Phá Kỷ Nguyên Số**
 
 [![Laravel](https://img.shields.io/badge/Laravel_11-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](#)
-[![PHP](https://img.shields.io/badge/PHP_8.2+-777BB4?style=for-the-badge&logo=php&logoColor=white)](#)
+[![PHP](https://img.shields.io/badge/PHP_8.5.7-777BB4?style=for-the-badge&logo=php&logoColor=white)](#)
 [![MySQL](https://img.shields.io/badge/MySQL_8.0-00000F?style=for-the-badge&logo=mysql&logoColor=white)](#)
 [![Bootstrap](https://img.shields.io/badge/UI_UX-Glassmorphism-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white)](#)
 [![VNPAY](https://img.shields.io/badge/Thanh_Toán-VNPAY_Sandbox-blue?style=for-the-badge)](#)
@@ -92,6 +92,8 @@ php artisan migrate --seed
 ```bash
 php artisan serve
 ```
+*(Nếu XAMPP của bạn không cài sẵn PHP 8.5.7, hãy tải PHP 8.5.7 về, giải nén và gọi đường dẫn tuyệt đối, ví dụ: `C:\xampp\php-8.5.7\php-8.5.7-nts-Win32-vs17-x64\php.exe artisan serve`)*
+
 Vào `http://127.0.0.1:8000` và chiêm ngưỡng kiệt tác!
 
 </details>

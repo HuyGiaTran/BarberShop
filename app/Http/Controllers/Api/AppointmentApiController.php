@@ -8,6 +8,7 @@ use App\Models\Service;
 use App\Models\User;
 use App\Services\AppointmentService;
 use App\Services\LoyaltyService;
+use App\Services\PromoCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
@@ -187,40 +188,32 @@ class AppointmentApiController extends Controller
     $bookingReference = $this->generateBookingReference();
 
     $promoCode = isset($validated['promo_code']) ? strtoupper(trim($validated['promo_code'])) : null;
-    $promoCodeError = null;
+    $promoService = app(PromoCodeService::class);
+    $totalOrderAmount = $services->sum('price');
+    $totalDiscount = 0;
 
-    if ($promoCode === 'BARBERVIP') {
-        if (!Carbon::parse($validated['appointment_date'])->isWeekend()) {
-            $promoCodeError = 'Mã BARBERVIP chỉ áp dụng vào Thứ 7 và Chủ Nhật.';
-        } else {
-            $user = User::find($validated['user_id']);
-            $loyaltyService = app(LoyaltyService::class);
-            $tier = $loyaltyService->summaryForUser($user)['tier'];
-            if (!in_array($tier, ['silver', 'gold', 'platinum'])) {
-                $promoCodeError = 'Mã BARBERVIP chỉ dành cho hạng thành viên Silver trở lên.';
-            }
+    if ($promoCode) {
+        $promoResult = $promoService->validateAndApply($promoCode, $totalOrderAmount);
+        if (!$promoResult['valid']) {
+            return response()->json([
+                'success' => false,
+                'message' => $promoResult['message'],
+                'error' => 'invalid_promo_code',
+            ], 400, [], JSON_UNESCAPED_UNICODE);
         }
-    } elseif ($promoCode && $promoCode !== 'REVIEW5K') {
-        $promoCodeError = 'Mã giảm giá không hợp lệ.';
-    }
-
-    if ($promoCodeError) {
-        return response()->json([
-            'success' => false,
-            'message' => $promoCodeError,
-            'error' => 'invalid_promo_code',
-        ], 400, [], JSON_UNESCAPED_UNICODE);
+        $totalDiscount = $promoResult['discount'];
+        $promo = \App\Models\PromoCode::where('code', $promoCode)->first();
+        if ($promo) $promoService->incrementUsage($promo);
     }
 
     foreach ($validated['service_ids'] as $index => $serviceId) {
         $service = $services->firstWhere('id', $serviceId);
         if (!$service) continue;
 
+        // Phân bổ discount theo tỷ lệ giá từng dịch vụ
         $discountAmount = 0;
-        if ($promoCode === 'REVIEW5K' && $index === 0) {
-            $discountAmount = 5000;
-        } elseif ($promoCode === 'BARBERVIP') {
-            $discountAmount = $service->price * 0.10;
+        if ($totalDiscount > 0 && $totalOrderAmount > 0) {
+            $discountAmount = round($totalDiscount * ($service->price / $totalOrderAmount));
         }
 
         $appointment = Appointment::create([

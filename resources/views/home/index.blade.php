@@ -75,7 +75,7 @@
                 <div class="col-lg-10 col-12 mx-auto">
                     <h2 class="mb-3">Giảm giá ưu đãi</h2>
                     <p>Dành cho khách hàng thân thiết vào cuối tuần</p>
-                    <strong>Mã giảm giá: BarBerVIP</strong>
+                    <a href="{{ route('promo_codes.list') }}" class="btn custom-btn">Xem mã giảm giá</a>
                 </div>
             </div>
         </div>

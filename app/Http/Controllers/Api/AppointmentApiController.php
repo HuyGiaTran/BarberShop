@@ -214,7 +214,7 @@ class AppointmentApiController extends Controller
     // Bước 4: Áp dụng mã giảm giá trên giá còn lại (sau giảm hạng)
     $promoDiscount = 0;
     if ($promoCode) {
-        $promoResult = $promoService->validateAndApply($promoCode, $afterTierPrice);
+        $promoResult = $promoService->validateAndApply($promoCode, $afterTierPrice, (int) $validated['user_id']);
         if (!$promoResult['valid']) {
             return response()->json([
                 'success' => false,

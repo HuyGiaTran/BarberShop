@@ -26,7 +26,8 @@ class PromoCodeApiController extends Controller
 
         $result = $this->promoCodeService->validateAndApply(
             $validated['code'],
-            (float) $validated['order_amount']
+            (float) $validated['order_amount'],
+            $request->user()?->id
         );
 
         return response()->json([

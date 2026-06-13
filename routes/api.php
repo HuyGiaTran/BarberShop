@@ -67,4 +67,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Barber specific routes
     Route::get('/barber/leave-requests', [App\Http\Controllers\Api\LeaveRequestApiController::class, 'index']);
     Route::post('/barber/leave-requests', [App\Http\Controllers\Api\LeaveRequestApiController::class, 'store']);
+
+    // Promo Code
+    Route::post('/promo-codes/validate', [App\Http\Controllers\Api\PromoCodeApiController::class, 'validate']);
 });

@@ -115,6 +115,15 @@ Route::middleware(['auth', 'admin'])->prefix('/admin')->name('admin.')->group(fu
         Route::delete('/{commission}', [App\Http\Controllers\Admin\CommissionController::class, 'destroy'])->name('destroy');
     });
 
+    Route::prefix('/promo-codes')->name('promo_codes.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\PromoCodeController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\Admin\PromoCodeController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Admin\PromoCodeController::class, 'store'])->name('store');
+        Route::get('/{promoCode}/edit', [App\Http\Controllers\Admin\PromoCodeController::class, 'edit'])->name('edit');
+        Route::put('/{promoCode}', [App\Http\Controllers\Admin\PromoCodeController::class, 'update'])->name('update');
+        Route::delete('/{promoCode}', [App\Http\Controllers\Admin\PromoCodeController::class, 'destroy'])->name('destroy');
+    });
+
     Route::prefix('/payrolls')->name('payrolls.')->group(function () {
         Route::get('/', [PayrollController::class, 'index'])->name('index');
         Route::post('/calculate', [PayrollController::class, 'calculate'])->name('calculate');

@@ -216,6 +216,12 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="{{ route('admin.promo_codes.index') }}" class="nav-link {{ request()->routeIs('admin.promo_codes.*') ? 'active' : '' }} d-block w-100">
+                    <i class="bi bi-ticket-perforated"></i>
+                    <span>Mã giảm giá</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="{{ route('admin.leave_requests.index') }}" class="nav-link {{ request()->routeIs('admin.leave_requests.*') ? 'active' : '' }} d-block w-100">
                     <i class="bi bi-envelope-paper"></i>
                     <span>Nghỉ phép</span>

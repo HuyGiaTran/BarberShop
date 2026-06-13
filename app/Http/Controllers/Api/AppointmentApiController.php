@@ -189,11 +189,32 @@ class AppointmentApiController extends Controller
 
     $promoCode = isset($validated['promo_code']) ? strtoupper(trim($validated['promo_code'])) : null;
     $promoService = app(PromoCodeService::class);
+    $loyaltyService = app(LoyaltyService::class);
+    $user = User::find($validated['user_id']);
+    
+    // --- GIẢM TẦNG (Stacked Discount) ---
+    // Bước 1: Tính discount theo hạng thành viên
+    $tierDiscountPercent = 0;
+    if ($user) {
+        $tierSummary = $loyaltyService->summaryForUser($user);
+        $tierDiscountPercent = (int) ($tierSummary['discount'] ?? 0);
+    }
+    
+    // Bước 2: Tính giá gốc
     $totalOrderAmount = $services->sum('price');
-    $totalDiscount = 0;
-
+    
+    // Bước 3: Giá sau giảm hạng
+    $afterTierPrice = $totalOrderAmount;
+    $tierDiscount = 0;
+    if ($tierDiscountPercent > 0) {
+        $tierDiscount = round($totalOrderAmount * $tierDiscountPercent / 100);
+        $afterTierPrice = $totalOrderAmount - $tierDiscount;
+    }
+    
+    // Bước 4: Áp dụng mã giảm giá trên giá còn lại (sau giảm hạng)
+    $promoDiscount = 0;
     if ($promoCode) {
-        $promoResult = $promoService->validateAndApply($promoCode, $totalOrderAmount);
+        $promoResult = $promoService->validateAndApply($promoCode, $afterTierPrice);
         if (!$promoResult['valid']) {
             return response()->json([
                 'success' => false,
@@ -201,10 +222,12 @@ class AppointmentApiController extends Controller
                 'error' => 'invalid_promo_code',
             ], 400, [], JSON_UNESCAPED_UNICODE);
         }
-        $totalDiscount = $promoResult['discount'];
+        $promoDiscount = $promoResult['discount'];
         $promo = \App\Models\PromoCode::where('code', $promoCode)->first();
         if ($promo) $promoService->incrementUsage($promo);
     }
+    
+    $totalDiscount = $tierDiscount + $promoDiscount;
 
     foreach ($validated['service_ids'] as $index => $serviceId) {
         $service = $services->firstWhere('id', $serviceId);

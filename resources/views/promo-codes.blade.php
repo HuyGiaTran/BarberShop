@@ -24,7 +24,12 @@
                                 <tbody>
                                     @foreach($promos as $p)
                                     <tr>
-                                        <td class="fw-bold text-uppercase">{{ $p->code }}</td>
+                                        <td class="fw-bold text-uppercase d-flex align-items-center gap-2">
+                                            {{ $p->code }}
+                                            <button class="btn btn-sm btn-outline-primary copy-btn" data-code="{{ $p->code }}" title="Sao chép mã">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                        </td>
                                         <td>
                                             @if($p->discount_type == 'percentage')
                                                 {{ $p->discount_value }}% 
@@ -62,4 +67,26 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.copy-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const code = this.dataset.code;
+            navigator.clipboard.writeText(code).then(function() {
+                const icon = btn.querySelector('i');
+                const originalClass = icon.className;
+                icon.className = 'bi bi-check-lg';
+                btn.classList.remove('btn-outline-primary');
+                btn.classList.add('btn-success');
+                setTimeout(function() {
+                    icon.className = originalClass;
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-outline-primary');
+                }, 1500);
+            });
+        });
+    });
+});
+</script>
 @endsection

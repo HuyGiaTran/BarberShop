@@ -7,7 +7,7 @@
         <a href="{{ route('admin.promo_codes.index') }}" class="btn btn-secondary">← Quay lại</a>
     </div>
     <div class="card shadow"><div class="card-body">
-        <form method="POST">
+        <form method="POST" action="{{ route('admin.promo_codes.store') }}">
             @csrf
             <div class="row g-3">
                 <div class="col-md-4"><label class="form-label">Mã giảm giá *</label><input name="code" class="form-control" required maxlength="50"></div>

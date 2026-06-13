@@ -58,6 +58,7 @@ class DatabaseSeeder extends Seeder
             BarberScheduleSeeder::class,
             ServiceSeeder::class,
             AppointmentSeeder::class,
+            PromoCodeSeeder::class,
         ]);
     }
 }

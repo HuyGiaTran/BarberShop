@@ -47,10 +47,42 @@ class Barber extends Model
     }
 
     /**
+     * Một barber có nhiều đánh giá
+     */
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    /**
      * Một barber có nhiều đơn xin nghỉ phép
      */
     public function leaveRequests(): HasMany
     {
         return $this->hasMany(LeaveRequest::class);
+    }
+
+    /**
+     * Một barber có nhiều bảng lương
+     */
+    public function payrolls(): HasMany
+    {
+        return $this->hasMany(Payroll::class);
+    }
+
+    /**
+     * Một barber có nhiều lịch làm việc
+     */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(BarberSchedule::class);
+    }
+
+    /**
+     * Một barber có nhiều cấu hình hoa hồng
+     */
+    public function commissions(): HasMany
+    {
+        return $this->hasMany(Commission::class);
     }
 }

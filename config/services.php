@@ -35,4 +35,24 @@ return [
         ],
     ],
 
+    'vnpay' => [
+        'tmn_code' => env('VNPAY_TMN_CODE'),
+        'hash_secret' => env('VNPAY_HASH_SECRET'),
+        'payment_url' => env('VNPAY_PAYMENT_URL', 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html'),
+        'return_url' => env('VNPAY_RETURN_URL', rtrim(env('APP_URL', 'http://localhost'), '/').'/api/vnpay/callback'),
+        'ipn_url' => env('VNPAY_IPN_URL', rtrim(env('APP_URL', 'http://localhost'), '/').'/api/vnpay/ipn'),
+        'version' => env('VNPAY_VERSION', '2.1.0'),
+        'order_type' => env('VNPAY_ORDER_TYPE', 'other'),
+        'locale' => env('VNPAY_LOCALE', 'vn'),
+        'expire_minutes' => (int) env('VNPAY_EXPIRE_MINUTES', 15),
+    ],
+
+    'deposit_transfer' => [
+        'bank_bin' => env('DEPOSIT_TRANSFER_BANK_BIN'),
+        'bank_name' => env('DEPOSIT_TRANSFER_BANK_NAME'),
+        'bank_account' => env('DEPOSIT_TRANSFER_BANK_ACCOUNT'),
+        'account_name' => env('DEPOSIT_TRANSFER_ACCOUNT_NAME'),
+        'qr_template' => env('DEPOSIT_TRANSFER_QR_TEMPLATE', 'compact2'),
+    ],
+
 ];

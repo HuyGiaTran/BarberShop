@@ -55,8 +55,10 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             BarberSeeder::class,
+            BarberScheduleSeeder::class,
             ServiceSeeder::class,
             AppointmentSeeder::class,
+            PromoCodeSeeder::class,
         ]);
     }
 }

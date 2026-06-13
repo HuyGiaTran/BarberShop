@@ -5,8 +5,15 @@
 <div class="card">
     <div class="card-header">Sửa Barber</div>
     <div class="card-body">
-        <p class="text-muted">Form sửa barber - Code bởi thành viên 2</p>
-        <a href="{{ route('admin.barbers.index') }}" class="btn btn-secondary">Quay lại</a>
+        <form action="{{ route('admin.barbers.update', $barber) }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
+
+            @include('barbers._form', [
+                'barber' => $barber,
+                'submitLabel' => 'Cập nhật barber',
+            ])
+        </form>
     </div>
 </div>
 @endsection

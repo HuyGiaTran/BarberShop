@@ -5,50 +5,129 @@ namespace App\Http\Controllers;
 use App\Models\Appointment;
 use App\Models\Barber;
 use App\Models\Service;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    /**
-     * Hiển thị trang Dashboard tổng quan
-     */
     public function index()
     {
-        // 1. LOGIC TỰ ĐỘNG HỦY LỊCH HẸN QUÁ HẠN
-        // Lấy thời gian hiện tại (set cứng múi giờ Việt Nam để so sánh chính xác)
-        $now = Carbon::now('Asia/Ho_Chi_Minh'); 
-        
-        Appointment::where('status', 'pending')
-            ->where(function ($query) use ($now) {
-                // Trường hợp 1: Ngày hẹn bé hơn ngày hôm nay
-                $query->where('appointment_date', '<', $now->toDateString())
-                      // Trường hợp 2: Cùng ngày hôm nay nhưng giờ hẹn bé hơn giờ hiện tại
-                      ->orWhere(function ($q) use ($now) {
-                          $q->where('appointment_date', '=', $now->toDateString())
-                            ->where('appointment_time', '<', $now->format('H:i'));
-                      });
-            })
-            ->update(['status' => 'cancelled']); // Đổi trạng thái thành Đã hủy
+        $currentMonthStart = Carbon::today()->startOfMonth();
+        $currentMonthEnd = Carbon::today()->endOfMonth();
+        $dashboardMonthLabel = $currentMonthStart->format('m/Y');
 
-        // 2. LẤY DỮ LIỆU HIỂN THỊ LÊN DASHBOARD
-        $totalAppointments = Appointment::count();
-        $pendingAppointments = Appointment::where('status', 'pending')->count();
+        $totalAppointments = Appointment::query()->primaryBookings()->count();
+        $pendingAppointments = Appointment::query()->primaryBookings()->where('status', 'pending')->count();
         $totalBarbers = Barber::count();
         $totalServices = Service::count();
 
-        $recentAppointments = Appointment::with(['user', 'barber', 'service'])
-            ->orderBy('appointment_date', 'asc')
-            ->orderBy('appointment_time', 'asc')
+        $recentAppointments = Appointment::query()
+            ->primaryBookings()
+            ->with(['user', 'barber', 'service'])
+            ->orderByDesc('appointment_date')
+            ->orderByDesc('appointment_time')
             ->take(10)
             ->get();
+
+        $recentBookingServices = Appointment::query()
+            ->with('service:id,name')
+            ->whereIn('booking_reference', $recentAppointments->pluck('booking_reference')->filter()->unique())
+            ->orderBy('booking_sequence')
+            ->get()
+            ->groupBy('booking_reference');
+
+        $recentAppointments->each(function (Appointment $appointment) use ($recentBookingServices): void {
+            $bookingAppointments = $recentBookingServices->get($appointment->booking_reference) ?? collect([$appointment]);
+            $comboLabel = Appointment::resolveComboLabelForServices($bookingAppointments);
+            $serviceNames = $bookingAppointments->pluck('service.name')->filter()->unique()->values();
+
+            $appointment->setAttribute(
+                'display_service_name',
+                $comboLabel
+                    ?? ($serviceNames->count() === 1 ? (string) $serviceNames->first() : $serviceNames->implode(' + '))
+            );
+        });
+
+        $days = collect(range(0, $currentMonthStart->daysInMonth - 1))
+            ->map(fn (int $offset) => $currentMonthStart->copy()->addDays($offset));
+
+        $appointmentsByDay = Appointment::query()
+            ->primaryBookings()
+            ->whereBetween('appointment_date', [
+                $days->first()->toDateString(),
+                $days->last()->toDateString(),
+            ])
+            ->selectRaw('DATE(appointment_date) as date, COUNT(*) as count')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->pluck('count', 'date');
+
+        $appointmentChartLabels = $days
+            ->map(fn (Carbon $date) => $date->format('d/m'))
+            ->values();
+
+        $appointmentChartData = $days
+            ->map(fn (Carbon $date) => (int) ($appointmentsByDay[$date->toDateString()] ?? 0))
+            ->values();
+
+        $statusOrder = ['pending', 'confirmed', 'completed', 'cancelled'];
+        $statusCounts = Appointment::query()
+            ->primaryBookings()
+            ->whereBetween('appointment_date', [
+                $currentMonthStart->toDateString(),
+                $currentMonthEnd->toDateString(),
+            ])
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status');
+
+        $statusChartLabels = collect($statusOrder)
+            ->map(fn (string $status) => match ($status) {
+                'pending' => 'Chờ xác nhận',
+                'confirmed' => 'Đã xác nhận',
+                'completed' => 'Hoàn thành',
+                'cancelled' => 'Đã hủy',
+                default => ucfirst($status),
+            })
+            ->values();
+
+        $statusChartData = collect($statusOrder)
+            ->map(fn (string $status) => (int) ($statusCounts[$status] ?? 0))
+            ->values();
+
+        $popularServices = Appointment::query()
+            ->whereBetween('appointment_date', [
+                $currentMonthStart->toDateString(),
+                $currentMonthEnd->toDateString(),
+            ])
+            ->where('status', '!=', 'cancelled')
+            ->selectRaw('service_id, COUNT(*) as bookings_count')
+            ->with('service:id,name')
+            ->groupBy('service_id')
+            ->orderByDesc('bookings_count')
+            ->take(5)
+            ->get();
+
+        $popularServiceLabels = $popularServices
+            ->map(fn (Appointment $appointment) => $appointment->service?->name ?? 'N/A')
+            ->values();
+        $popularServiceData = $popularServices
+            ->pluck('bookings_count')
+            ->map(fn ($count) => (int) $count)
+            ->values();
 
         return view('dashboard', compact(
             'totalAppointments',
             'pendingAppointments',
             'totalBarbers',
             'totalServices',
-            'recentAppointments'
+            'recentAppointments',
+            'dashboardMonthLabel',
+            'appointmentChartLabels',
+            'appointmentChartData',
+            'statusChartLabels',
+            'statusChartData',
+            'popularServiceLabels',
+            'popularServiceData'
         ));
     }
 }

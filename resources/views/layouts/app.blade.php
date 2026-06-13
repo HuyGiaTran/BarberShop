@@ -180,21 +180,63 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="{{ route('admin.schedules.index') }}" class="nav-link {{ request()->routeIs('admin.schedules.*') ? 'active' : '' }} d-block w-100">
+                    <i class="bi bi-calendar-range"></i>
+                    <span>Lịch làm việc</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="{{ route('admin.services.index') }}" class="nav-link {{ request()->routeIs('admin.services.*') ? 'active' : '' }} d-block w-100">
                     <i class="bi bi-tag"></i>
                     <span>Quản lý Dịch vụ</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{{ route('admin.appointments.index') }}" class="nav-link {{ request()->routeIs('admin.appointments.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.appointments.index') }}" class="nav-link {{ request()->routeIs('admin.appointments.*') ? 'active' : '' }} d-block w-100">
                     <i class="bi bi-calendar-check"></i>
                     <span>Lịch hẹn</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{{ route('admin.leave_requests.index') }}" class="nav-link {{ request()->routeIs('admin.leave_requests.*') ? 'active' : '' }}">
-                    <i class="bi bi-file-earmark-text"></i>
-                    <span>Đơn xin nghỉ</span>
+                <a href="{{ route('admin.invoices.index') }}" class="nav-link {{ request()->routeIs('admin.invoices.*') ? 'active' : '' }} d-block w-100">
+                    <i class="bi bi-receipt"></i>
+                    <span>Hóa đơn</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.payments.index') }}" class="nav-link {{ request()->routeIs('admin.payments.*') ? 'active' : '' }} d-block w-100">
+                    <i class="bi bi-qr-code-scan"></i>
+                    <span>Xác nhận cọc</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.reviews.index') }}" class="nav-link {{ request()->routeIs('admin.reviews.*') ? 'active' : '' }} d-block w-100">
+                    <i class="bi bi-star"></i>
+                    <span>Quản lý Đánh giá</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.promo_codes.index') }}" class="nav-link {{ request()->routeIs('admin.promo_codes.*') ? 'active' : '' }} d-block w-100">
+                    <i class="bi bi-ticket-perforated"></i>
+                    <span>Mã giảm giá</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.leave_requests.index') }}" class="nav-link {{ request()->routeIs('admin.leave_requests.*') ? 'active' : '' }} d-block w-100">
+                    <i class="bi bi-envelope-paper"></i>
+                    <span>Nghỉ phép</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.payrolls.index') }}" class="nav-link {{ request()->routeIs('admin.payrolls.*') ? 'active' : '' }} d-block w-100">
+                    <i class="bi bi-cash-coin"></i>
+                    <span>Bảng lương</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.statistics.index') }}" class="nav-link {{ request()->routeIs('admin.statistics.*') ? 'active' : '' }} d-block w-100">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <span>Thống kê</span>
                 </a>
             </li>
             <li class="nav-item mt-4">

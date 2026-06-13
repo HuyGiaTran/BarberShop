@@ -4,122 +4,116 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
-use App\Models\User;
 use App\Models\Barber;
 use App\Models\Service;
-use App\Models\LeaveRequest;
-use Illuminate\Http\Request;
+use App\Models\User;
+use App\Services\AppointmentService;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class AppointmentController extends Controller
 {
-    /**
-     * 1. Danh sách lịch hẹn (Có bộ lọc theo ngày và trạng thái)
-     */
+    public function __construct(
+        private readonly AppointmentService $appointmentService
+    ) {
+    }
+
     public function index(Request $request)
     {
         $query = Appointment::with(['user', 'barber', 'service']);
 
-        // Bộ lọc theo ngày
         if ($request->filled('date')) {
             $query->whereDate('appointment_date', $request->date);
         }
 
-        // Bộ lọc theo trạng thái
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
         $appointments = $query->orderBy('appointment_date', 'asc')
-                             ->orderBy('appointment_time', 'asc')
-                             ->get();
+            ->orderBy('appointment_time', 'asc')
+            ->paginate(10)
+            ->withQueryString();
 
         return view('appointments.index', compact('appointments'));
     }
 
-    /**
-     * 2. Form đặt lịch mới
-     */
     public function create()
     {
-        // Truyền dữ liệu ra form chọn
         $users = User::where('role', 'customer')->get();
         $barbers = Barber::where('is_active', true)->get();
         $services = Service::all();
+
         return view('appointments.create', compact('users', 'barbers', 'services'));
     }
 
-    /**
-     * 3. Lưu lịch hẹn (Kiểm tra trùng giờ phục vụ của Barber)
-     */
     public function store(Request $request)
     {
-        // Validate dữ liệu đầu vào
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'barber_id' => 'required|exists:barbers,id',
             'service_id' => 'required|exists:services,id',
             'appointment_date' => 'required|date|after_or_equal:today',
-            'appointment_time' => 'required|string',
+            'appointment_time' => 'required|date_format:H:i',
             'status' => 'required|in:pending,confirmed,completed,cancelled',
             'notes' => 'nullable|string',
         ], [
-            'user_id.required' => 'Vui lòng chọn khách hàng.',
-            'barber_id.required' => 'Vui lòng chọn thợ cắt tóc.',
-            'service_id.required' => 'Vui lòng chọn dịch vụ.',
-            'appointment_date.required' => 'Vui lòng chọn ngày hẹn.',
-            'appointment_date.after_or_equal' => 'Ngày hẹn không được nhỏ hơn ngày hôm nay.',
-            'appointment_time.required' => 'Vui lòng chọn khung giờ hẹn.',
+            'user_id.required' => 'Vui long chon khach hang.',
+            'barber_id.required' => 'Vui long chon barber.',
+            'service_id.required' => 'Vui long chon dich vu.',
+            'appointment_date.required' => 'Vui long chon ngay hen.',
+            'appointment_date.after_or_equal' => 'Ngay hen khong duoc nho hon ngay hom nay.',
+            'appointment_time.required' => 'Vui long chon khung gio hen.',
+            'appointment_time.date_format' => 'Khung gio hen khong hop le.',
         ]);
 
-        // Logic chặn hoàn thành lịch hẹn trong tương lai
-        if ($request->status === 'completed' && Carbon::parse($request->appointment_date)->isFuture()) {
-            return back()->withInput()->withErrors(['status' => 'Không thể hoàn thành lịch hẹn trong tương lai.']);
+        $validated['appointment_time'] = $this->normalizeAppointmentTime($validated['appointment_time']);
+        $service = Service::findOrFail($validated['service_id']);
+
+        if ($validated['status'] === 'completed'
+            && $this->isAppointmentInFuture($validated['appointment_date'], $validated['appointment_time'])) {
+            return back()->withInput()->withErrors([
+                'status' => 'Khong the hoan thanh lich hen trong tuong lai.',
+            ]);
         }
 
-        // Kiểm tra xem Barber đã có lịch trùng khớp ngày giờ và không bị hủy chưa
-        $isOverlapping = Appointment::where('barber_id', $request->barber_id)
-            ->where('appointment_date', $request->appointment_date)
-            ->where('appointment_time', $request->appointment_time)
-            ->where('status', '!=', 'cancelled')
-            ->exists();
+        // Kiểm tra barber có đang nghỉ phép không
+        if ($this->appointmentService->isBarberOnApprovedLeave(
+            (int) $validated['barber_id'],
+            $validated['appointment_date']
+        )) {
+            return back()->withInput()->withErrors([
+                'appointment_date' => 'Barber nay dang nghi phep trong ngay duoc chon.',
+            ]);
+        }
+
+        // Kiểm tra trùng lịch
+        $isOverlapping = $this->appointmentService->hasConflict(
+            (int) $validated['barber_id'],
+            $validated['appointment_date'],
+            $validated['appointment_time'],
+            (int) $service->duration_minutes
+        );
 
         if ($isOverlapping) {
             return back()->withInput()->withErrors([
-                'appointment_time' => 'Thợ cắt tóc này đã có lịch hẹn cố định vào khung giờ này. Vui lòng chọn giờ hoặc thợ khác.'
+                'appointment_time' => 'Barber nay da co lich hen bi chong cheo ve thoi gian. Vui long chon gio hoac barber khac.',
             ]);
         }
 
-        // Kiểm tra xem barber có đơn nghỉ phép được duyệt trong thời gian này không
-        $aptDateTime = Carbon::createFromFormat('Y-m-d H:i', $request->appointment_date . ' ' . $request->appointment_time);
-        $hasApprovedLeave = LeaveRequest::where('barber_id', $request->barber_id)
-            ->where('status', 'approved')
-            ->whereDate('start_time', '<=', $request->appointment_date)
-            ->whereDate('end_time', '>=', $request->appointment_date)
-            ->get()
-            ->filter(function ($leave) use ($aptDateTime) {
-                return $aptDateTime >= $leave->start_time && $aptDateTime < $leave->end_time;
-            })
-            ->isNotEmpty();
+        $appointment = Appointment::create(array_merge($validated, [
+            'booking_reference' => 'BKG-'.now()->format('YmdHis').'-'.Str::upper(Str::random(6)),
+            'booking_sequence' => 1,
+            'is_booking_primary' => true,
+            'deposit_amount' => 50000,
+            'deposit_status' => 'unpaid',
+        ]));
 
-        if ($hasApprovedLeave) {
-            return back()->withInput()->withErrors([
-                'barber_id' => 'Thợ cắt tóc này đang nghỉ phép vào thời gian này. Vui lòng chọn barber khác hoặc thời gian khác.'
-            ]);
-        }
+        $appointment->load(['user', 'barber', 'service']);
+        $appointment->user->notify(new \App\Notifications\AppointmentBooked($appointment));
 
-        // Tạo lịch hẹn mới
-        Appointment::create([
-            'user_id' => $request->user_id,
-            'barber_id' => $request->barber_id,
-            'service_id' => $request->service_id,
-            'appointment_date' => $request->appointment_date,
-            'appointment_time' => $request->appointment_time,
-            'status' => $request->status ?? 'pending',
-            'notes' => $request->notes,
-        ]);
-
-        return redirect()->route('appointments.index')->with('success', 'Đặt lịch hẹn mới thành công!');
+        return redirect()->route('admin.appointments.index')->with('success', 'Tao lich hen moi thanh cong!');
     }
 
     public function show(Appointment $appointment)
@@ -127,115 +121,123 @@ class AppointmentController extends Controller
         return view('appointments.show', compact('appointment'));
     }
 
-    /**
-     * 4. Chỉnh sửa lịch hẹn
-     */
     public function edit(Appointment $appointment)
     {
         $users = User::where('role', 'customer')->get();
         $barbers = Barber::where('is_active', true)->get();
         $services = Service::all();
+
         return view('appointments.edit', compact('appointment', 'users', 'barbers', 'services'));
     }
 
-    /**
-     * 5. Cập nhật lịch hẹn (Kiểm tra trùng giờ loại trừ chính nó)
-     */
     public function update(Request $request, Appointment $appointment)
     {
-        // Validate dữ liệu
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'barber_id' => 'required|exists:barbers,id',
             'service_id' => 'required|exists:services,id',
             'appointment_date' => 'required|date',
-            'appointment_time' => 'required|string',
+            'appointment_time' => 'required|date_format:H:i',
             'status' => 'required|string|in:pending,confirmed,completed,cancelled',
             'notes' => 'nullable|string',
         ], [
-            'user_id.required' => 'Vui lòng chọn khách hàng.',
-            'barber_id.required' => 'Vui lòng chọn thợ cắt tóc.',
-            'service_id.required' => 'Vui lòng chọn dịch vụ.',
-            'appointment_date.required' => 'Vui lòng chọn ngày hẹn.',
-            'appointment_time.required' => 'Vui lòng chọn khung giờ hẹn.',
+            'user_id.required' => 'Vui long chon khach hang.',
+            'barber_id.required' => 'Vui long chon barber.',
+            'service_id.required' => 'Vui long chon dich vu.',
+            'appointment_date.required' => 'Vui long chon ngay hen.',
+            'appointment_time.required' => 'Vui long chon khung gio hen.',
+            'appointment_time.date_format' => 'Khung gio hen khong hop le.',
         ]);
 
-        // Logic chặn hoàn thành lịch hẹn trong tương lai
-        if ($request->status === 'completed' && Carbon::parse($request->appointment_date)->isFuture()) {
-            return back()->withInput()->withErrors(['status' => 'Không thể hoàn thành lịch hẹn trong tương lai.']);
-        }
+        $validated['appointment_time'] = $this->normalizeAppointmentTime($validated['appointment_time']);
+        $service = Service::findOrFail($validated['service_id']);
 
-        // Kiểm tra trùng lịch hẹn của Barber (trừ chính bản ghi này)
-        $isOverlapping = Appointment::where('barber_id', $request->barber_id)
-            ->where('appointment_date', $request->appointment_date)
-            ->where('appointment_time', $request->appointment_time)
-            ->where('status', '!=', 'cancelled')
-            ->where('id', '!=', $appointment->id)
-            ->exists();
-
-        if ($isOverlapping) {
+        if ($validated['status'] === 'completed'
+            && $this->isAppointmentInFuture($validated['appointment_date'], $validated['appointment_time'])) {
             return back()->withInput()->withErrors([
-                'appointment_time' => 'Thợ cắt tóc này đã có lịch hẹn cố định vào khung giờ này. Vui lòng chọn giờ khác.'
+                'status' => 'Khong the hoan thanh lich hen trong tuong lai.',
             ]);
         }
 
-        // Kiểm tra xem barber có đơn nghỉ phép được duyệt trong thời gian này không (nếu thay đổi barber hoặc thời gian)
-        if ($request->barber_id != $appointment->barber_id || 
-            $request->appointment_date != $appointment->appointment_date ||
-            $request->appointment_time != $appointment->appointment_time) {
-            
-            $aptDateTime = Carbon::createFromFormat('Y-m-d H:i', $request->appointment_date . ' ' . $request->appointment_time);
-            $hasApprovedLeave = LeaveRequest::where('barber_id', $request->barber_id)
-                ->where('status', 'approved')
-                ->whereDate('start_time', '<=', $request->appointment_date)
-                ->whereDate('end_time', '>=', $request->appointment_date)
-                ->get()
-                ->filter(function ($leave) use ($aptDateTime) {
-                    return $aptDateTime >= $leave->start_time && $aptDateTime < $leave->end_time;
-                })
-                ->isNotEmpty();
+        // Chỉ kiểm tra nghỉ phép nếu barber, ngày hoặc giờ thay đổi
+        if ($validated['barber_id'] != $appointment->barber_id ||
+            $validated['appointment_date'] != $appointment->appointment_date->format('Y-m-d') ||
+            $validated['appointment_time'] != $appointment->appointment_time) {
 
-            if ($hasApprovedLeave) {
+            if ($this->appointmentService->isBarberOnApprovedLeave(
+                (int) $validated['barber_id'],
+                $validated['appointment_date']
+            )) {
                 return back()->withInput()->withErrors([
-                    'barber_id' => 'Thợ cắt tóc này đang nghỉ phép vào thời gian này. Vui lòng chọn barber khác hoặc thời gian khác.'
+                    'appointment_date' => 'Barber nay dang nghi phep trong ngay duoc chon.',
                 ]);
             }
         }
 
-        // Cập nhật vào DB
-        $appointment->update($request->all());
+        // Kiểm tra trùng lịch
+        $isOverlapping = $this->appointmentService->hasConflict(
+            (int) $validated['barber_id'],
+            $validated['appointment_date'],
+            $validated['appointment_time'],
+            (int) $service->duration_minutes,
+            $appointment->id
+        );
 
-        return redirect()->route('appointments.index')->with('success', 'Cập nhật lịch hẹn thành công!');
+        if ($isOverlapping) {
+            return back()->withInput()->withErrors([
+                'appointment_time' => 'Barber nay da co lich hen bi chong cheo ve thoi gian. Vui long chon gio khac.',
+            ]);
+        }
+
+        $oldStatus = $appointment->status;
+        $appointment->update($validated);
+
+        if ($oldStatus !== 'cancelled' && $appointment->status === 'cancelled') {
+            $appointment->load(['user', 'barber', 'service']);
+            $appointment->user->notify(new \App\Notifications\AppointmentCancelled($appointment));
+        }
+
+        return redirect()->route('admin.appointments.index')->with('success', 'Cap nhat lich hen thanh cong!');
     }
 
-    /**
-     * 6. Hủy / Xóa lịch hẹn
-     */
     public function destroy(Appointment $appointment)
     {
-        // Xóa lịch hẹn
         $appointment->delete();
-        
-        return redirect()->route('appointments.index')->with('success', 'Cập nhật lịch hẹn thành công!');
+
+        return redirect()->route('admin.appointments.index')->with('success', 'Xoa lich hen thanh cong!');
     }
 
-    /**
-     * 7. Cập nhật nhanh trạng thái (Xác nhận/Hủy lịch bằng 1 click)
-     */
     public function updateStatus(Request $request, Appointment $appointment)
     {
-        // API hoặc Form cập nhật nhanh trạng thái
         $validated = $request->validate([
             'status' => 'required|string|in:pending,confirmed,completed,cancelled',
         ]);
 
-        // Logic chặn hoàn thành lịch hẹn trong tương lai
-        if ($request->status === 'completed' && $appointment->appointment_date->isFuture()) {
-            return back()->with('error', 'Không thể hoàn thành lịch hẹn trong tương lai!');
+        if ($validated['status'] === 'completed' && $this->isAppointmentInFuture(
+            $appointment->appointment_date->format('Y-m-d'),
+            $appointment->appointment_time
+        )) {
+            return back()->with('error', 'Khong the hoan thanh lich hen trong tuong lai!');
         }
 
+        $oldStatus = $appointment->status;
         $appointment->update(['status' => $validated['status']]);
 
-        return redirect()->route('appointments.index')->with('success', 'Cập nhật trạng thái lịch hẹn thành công!');
+        if ($oldStatus !== 'cancelled' && $appointment->status === 'cancelled') {
+            $appointment->load(['user', 'barber', 'service']);
+            $appointment->user->notify(new \App\Notifications\AppointmentCancelled($appointment));
+        }
+
+        return redirect()->route('admin.appointments.index')->with('success', 'Cap nhat trang thai lich hen thanh cong!');
+    }
+
+    private function normalizeAppointmentTime(string $time): string
+    {
+        return strlen($time) === 5 ? "{$time}:00" : $time;
+    }
+
+    private function isAppointmentInFuture(string $date, string $time): bool
+    {
+        return Carbon::parse("{$date} {$time}", config('app.timezone'))->isFuture();
     }
 }

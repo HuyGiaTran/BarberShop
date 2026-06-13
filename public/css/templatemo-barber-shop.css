@@ -501,6 +501,9 @@ strong {
   display: block;
   margin: auto;
   transition: all 0.3s;
+  width: 100%;
+  aspect-ratio: 3/2;
+  object-fit: cover;
 }
 
 .services-thumb-price {

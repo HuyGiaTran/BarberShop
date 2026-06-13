@@ -5,8 +5,14 @@
 <div class="card">
     <div class="card-header">Thêm Barber</div>
     <div class="card-body">
-        <p class="text-muted">Form thêm barber - Code bởi thành viên 2</p>
-        <a href="{{ route('admin.barbers.index') }}" class="btn btn-secondary">Quay lại</a>
+        <form action="{{ route('admin.barbers.store') }}" method="POST" enctype="multipart/form-data">
+            @csrf
+
+            @include('barbers._form', [
+                'barber' => null,
+                'submitLabel' => 'Thêm barber',
+            ])
+        </form>
     </div>
 </div>
 @endsection

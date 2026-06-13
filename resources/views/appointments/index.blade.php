@@ -119,6 +119,11 @@
                     </tbody>
                 </table>
             </div>
+            @if($appointments->hasPages())
+                <div class="px-3 py-3 border-top bg-white">
+                    {{ $appointments->links() }}
+                </div>
+            @endif
         @else
             <div class="text-center py-5">
                 <i class="bi bi-calendar-x display-4 text-muted"></i>

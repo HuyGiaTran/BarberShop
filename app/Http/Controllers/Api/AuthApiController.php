@@ -88,8 +88,8 @@ class AuthApiController extends Controller
             ], 401); // 401 Unauthorized
         }
 
-        // Bước 4: Xóa các token cũ (optional - mỗi lần login chỉ có 1 token)
-        // $user->tokens()->delete(); // Bỏ comment nếu muốn single-session
+        // Bước 4: Xóa các token cũ để tránh phát sinh token rác khi đăng nhập nhiều lần
+        $user->tokens()->delete();
 
         // Bước 5: Tạo Sanctum Personal Access Token mới
         $token = $user->createToken('api_token')->plainTextToken;

@@ -89,7 +89,7 @@
                                     <tr>
                                         <td>{{ $appointment->user->name ?? 'N/A' }}</td>
                                         <td>{{ $appointment->barber->name ?? 'N/A' }}</td>
-                                        <td>{{ $appointment->service->name ?? 'N/A' }}</td>
+                                        <td>{{ $appointment->display_service_name ?? $appointment->service->name ?? 'N/A' }}</td>
                                         
                                         <td>
                                             {{ $appointment->appointment_date ? $appointment->appointment_date->format('d-m-Y') : 'N/A' }} 
@@ -129,5 +129,202 @@
             </div>
         </div>
     </div>
+
+    <div class="row g-4 mt-1">
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="bi bi-bar-chart-line me-2"></i>Lịch hẹn theo ngày trong tháng {{ $dashboardMonthLabel ?? now()->format('m/Y') }}
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height: 250px; width: 100%;">
+                        <canvas id="appointmentsByDayChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="bi bi-pie-chart me-2"></i>Tỷ lệ trạng thái lịch hẹn tháng {{ $dashboardMonthLabel ?? now()->format('m/Y') }}
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height: 200px; width: 100%;">
+                        <canvas id="appointmentStatusChart"></canvas>
+                    </div>
+                    <p id="appointmentStatusNote" class="text-center text-muted small mt-3 mb-0"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-1">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-stars me-2"></i>Top 5 dịch vụ phổ biến tháng {{ $dashboardMonthLabel ?? now()->format('m/Y') }}
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height: 200px; width: 100%;">
+                        <canvas id="popularServicesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const appointmentLabels = @json($appointmentChartLabels ?? []);
+    const appointmentData = @json($appointmentChartData ?? []);
+    const statusLabels = @json($statusChartLabels ?? []);
+    const statusData = @json($statusChartData ?? []);
+    const serviceLabels = @json($popularServiceLabels ?? []);
+    const serviceData = @json($popularServiceData ?? []);
+    const statusColors = [
+        'rgba(253, 203, 110, 0.85)',
+        'rgba(9, 132, 227, 0.85)',
+        'rgba(0, 184, 148, 0.85)',
+        'rgba(214, 48, 49, 0.85)',
+    ];
+
+    const formatPercentage = (value) => {
+        const normalized = Number(value) || 0;
+
+        if (Number.isInteger(normalized)) {
+            return `${normalized}%`;
+        }
+
+        return `${normalized.toFixed(1)}%`;
+    };
+
+    const appointmentsByDayCanvas = document.getElementById('appointmentsByDayChart');
+    if (appointmentsByDayCanvas) {
+        new Chart(appointmentsByDayCanvas, {
+            type: 'bar',
+            data: {
+                labels: appointmentLabels,
+                datasets: [{
+                    label: 'Số lịch hẹn',
+                    data: appointmentData,
+                    backgroundColor: 'rgba(102, 126, 234, 0.75)',
+                    borderColor: 'rgba(102, 126, 234, 1)',
+                    borderWidth: 1,
+                    borderRadius: 8,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false,
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    const appointmentStatusCanvas = document.getElementById('appointmentStatusChart');
+    if (appointmentStatusCanvas) {
+        const totalStatuses = statusData.reduce((sum, value) => sum + Number(value || 0), 0);
+        const statusPercentages = statusData.map((value) => {
+            if (!totalStatuses) {
+                return 0;
+            }
+
+            return Number((((Number(value) || 0) / totalStatuses) * 100).toFixed(1));
+        });
+
+        const appointmentStatusNote = document.getElementById('appointmentStatusNote');
+
+        if (appointmentStatusNote) {
+            appointmentStatusNote.textContent = statusLabels.map((label, index) => (
+                `${label}: ${formatPercentage(statusPercentages[index] ?? 0)}`
+            )).join(' • ');
+        }
+
+        new Chart(appointmentStatusCanvas, {
+            type: 'doughnut',
+            data: {
+                labels: statusLabels,
+                datasets: [{
+                    data: statusData,
+                    backgroundColor: statusColors,
+                    borderWidth: 0,
+                    hoverOffset: 10,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label(context) {
+                                const percentage = statusPercentages[context.dataIndex] ?? 0;
+                                const count = statusData[context.dataIndex] ?? 0;
+
+                                return `${context.label}: ${count} lịch (${formatPercentage(percentage)})`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    const popularServicesCanvas = document.getElementById('popularServicesChart');
+    if (popularServicesCanvas) {
+        new Chart(popularServicesCanvas, {
+            type: 'bar',
+            data: {
+                labels: serviceLabels,
+                datasets: [{
+                    label: 'Số lịch hẹn',
+                    data: serviceData,
+                    backgroundColor: 'rgba(233, 69, 96, 0.8)',
+                    borderColor: 'rgba(233, 69, 96, 1)',
+                    borderWidth: 1,
+                    borderRadius: 8,
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false,
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+@endpush

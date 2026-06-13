@@ -198,7 +198,7 @@
                 </a>
             </li>
         </ul>
-        
+
         <div class="mt-auto">
             <hr style="border-color:rgba(200,169,126,.1);margin:10px 20px;">
             <form method="POST" action="{{ route('logout') }}">

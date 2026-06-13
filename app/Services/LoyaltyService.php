@@ -11,13 +11,13 @@ use Illuminate\Support\Facades\DB;
 class LoyaltyService
 {
     /**
-     * @var array<int, array{key: string, label: string, min_points: int}>
+     * @var array<int, array{key: string, label: string, min_points: int, discount: int, benefits: string}>
      */
     private const TIERS = [
-        ['key' => 'bronze', 'label' => 'Bronze', 'min_points' => 0],
-        ['key' => 'silver', 'label' => 'Silver', 'min_points' => 500],
-        ['key' => 'gold', 'label' => 'Gold', 'min_points' => 1500],
-        ['key' => 'platinum', 'label' => 'Platinum', 'min_points' => 3000],
+        ['key' => 'bronze',   'label' => 'Đồng',    'min_points' => 0,   'discount' => 0,  'benefits' => 'Hạng mặc định khi đăng ký'],
+        ['key' => 'silver',   'label' => 'Bạc',     'min_points' => 200, 'discount' => 5,  'benefits' => 'Giảm 5% cho lần cắt tiếp theo'],
+        ['key' => 'gold',     'label' => 'Vàng',    'min_points' => 400, 'discount' => 10, 'benefits' => 'Giảm 10% + ưu tiên đặt lịch'],
+        ['key' => 'platinum', 'label' => 'Bạch kim', 'min_points' => 700, 'discount' => 15, 'benefits' => 'Giảm 15% + ưu tiên + quà tặng sinh nhật'],
     ];
 
     public function ensureProgramForUser(User $user): LoyaltyProgram
@@ -108,8 +108,12 @@ class LoyaltyService
             'points' => $points,
             'tier' => $tier,
             'tier_label' => (string) $currentTier['label'],
+            'discount' => (int) $currentTier['discount'],
+            'benefits' => (string) $currentTier['benefits'],
             'next_tier' => $nextTier['key'] ?? null,
             'next_tier_label' => $nextTier['label'] ?? null,
+            'next_tier_discount' => $nextTier['discount'] ?? null,
+            'next_tier_benefits' => $nextTier['benefits'] ?? null,
             'points_to_next_tier' => $nextTier ? max(0, (int) $nextTier['min_points'] - $points) : 0,
             'progress_percentage' => max(0, min(100, $progressPercentage)),
             'recent_logs' => $recentLogs,

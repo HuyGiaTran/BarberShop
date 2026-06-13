@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Services\PaymentFlowService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
 {
@@ -57,6 +57,13 @@ class InvoiceController extends Controller
             ->withQueryString();
 
         return view('invoices.index', compact('invoices'));
+    }
+
+    public function printPdf(Invoice $invoice): \Illuminate\Http\Response
+    {
+        $invoice->loadMissing(['user', 'appointment.barber', 'appointment.service']);
+        $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
+        return $pdf->download("hoa-don-{$invoice->id}.pdf");
     }
 
     public function markCashPaid(Invoice $invoice): RedirectResponse

@@ -145,7 +145,7 @@
                                                     class="btn btn-sm btn-outline-success"
                                                     onclick="return confirm('Xác nhận đã thu tiền mặt cho hóa đơn này?')"
                                                 >
-                                                    <i class="bi bi-cash-coin"></i> Đã thu tiền mặt
+                                                    <i class="bi bi-cash-coin"></i> Đã thu tiền
                                                 </button>
                                             </form>
 

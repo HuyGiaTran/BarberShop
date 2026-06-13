@@ -29,7 +29,7 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-// Customer routes - xem lịch hẹn đã đặt
+// Customer routes
 Route::middleware(['auth'])->prefix('/my')->name('customer.')->group(function () {
     Route::get('/appointments', [App\Http\Controllers\Customer\AppointmentController::class, 'index'])->name('appointments.index');
     Route::get('/appointments/{appointment}', [App\Http\Controllers\Customer\AppointmentController::class, 'show'])->name('appointments.show');
@@ -37,6 +37,9 @@ Route::middleware(['auth'])->prefix('/my')->name('customer.')->group(function ()
     Route::get('/appointments/{appointment}/deposit', [App\Http\Controllers\Customer\AppointmentController::class, 'deposit'])->name('appointments.deposit');
     Route::post('/appointments/{appointment}/deposit', [App\Http\Controllers\Customer\AppointmentController::class, 'processDeposit'])->name('appointments.processDeposit');
     Route::delete('/appointments/{appointment}', [App\Http\Controllers\Customer\AppointmentController::class, 'cancel'])->name('appointments.cancel');
+
+    // Điểm thưởng & hạng thành viên
+    Route::get('/loyalty', [App\Http\Controllers\Customer\LoyaltyController::class, 'index'])->name('loyalty.index');
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -106,6 +109,12 @@ Route::middleware(['auth', 'admin'])->prefix('/admin')->name('admin.')->group(fu
         Route::post('/{leaveRequest}/reject', [AdminLeaveRequestController::class, 'reject'])->name('reject');
     });
 
+    Route::prefix('/commissions')->name('commissions.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\CommissionController::class, 'index'])->name('index');
+        Route::post('/', [App\Http\Controllers\Admin\CommissionController::class, 'store'])->name('store');
+        Route::delete('/{commission}', [App\Http\Controllers\Admin\CommissionController::class, 'destroy'])->name('destroy');
+    });
+
     Route::prefix('/payrolls')->name('payrolls.')->group(function () {
         Route::get('/', [PayrollController::class, 'index'])->name('index');
         Route::post('/calculate', [PayrollController::class, 'calculate'])->name('calculate');
@@ -118,21 +127,13 @@ Route::middleware(['auth', 'admin'])->prefix('/admin')->name('admin.')->group(fu
 });
 
 Route::middleware(['auth', 'barber'])->prefix('/barber')->name('barber.')->group(function () {
-    // Dashboard
     Route::get('/dashboard', [BarberDashboardController::class, 'index'])->name('dashboard');
-
-    // Lịch hẹn
     Route::get('/appointments', [BarberDashboardController::class, 'appointments'])->name('appointments');
     Route::patch('/appointments/{appointment}/status', [BarberDashboardController::class, 'updateAppointmentStatus'])->name('appointments.updateStatus');
-
-    // Hồ sơ cá nhân
     Route::get('/profile', [BarberDashboardController::class, 'profile'])->name('profile');
     Route::put('/profile', [BarberDashboardController::class, 'updateProfile'])->name('profile.update');
-
-    // Trạng thái hoạt động
     Route::patch('/status', [BarberDashboardController::class, 'updateWorkingStatus'])->name('status.update');
 
-    // Đơn xin nghỉ phép
     Route::prefix('/leave-requests')->name('leave_requests.')->group(function () {
         Route::get('/', [BarberLeaveRequestController::class, 'index'])->name('index');
         Route::get('/create', [BarberLeaveRequestController::class, 'create'])->name('create');

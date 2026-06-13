@@ -18,6 +18,46 @@
         <link href="{{ asset('css/bootstrap-icons.css') }}" rel="stylesheet">
         <link href="{{ asset('css/templatemo-barber-shop.css') }}" rel="stylesheet">
         <style>
+            /* ===== SIDEBAR MENU STYLES ===== */
+            .sidebar .nav-link {
+                font-size: 16px;
+                padding: 12px 20px;
+                transition: all 0.3s ease;
+                border-radius: 6px;
+                margin: 2px 10px;
+                color: var(--dark-color);
+            }
+            .sidebar .nav-link:hover {
+                transform: scale(1.05);
+                background-color: #d4edda !important;
+                color: #155724;
+                font-weight: 600;
+            }
+            .sidebar .nav-link:active,
+            .sidebar .nav-link:focus {
+                transform: scale(1.05);
+                background-color: #c3e6cb !important;
+            }
+            .sidebar .nav-item.logout-item .nav-link,
+            .sidebar .nav-item.logout-item button {
+                transition: all 0.3s ease;
+                border-radius: 6px;
+                margin: 2px 10px;
+            }
+            .sidebar .nav-item.logout-item .nav-link:hover,
+            .sidebar .nav-item.logout-item button:hover {
+                transform: scale(1.05);
+                background-color: #f8d7da !important;
+                color: #721c24 !important;
+                font-weight: 600;
+            }
+            .sidebar .navbar-brand .logo-image {
+                transition: transform 0.3s ease;
+            }
+            .sidebar .navbar-brand:hover .logo-image {
+                transform: scale(1.08);
+            }
+
             /* Modern Premium Chatbot Styles */
             #chatbot-container {
                 position: fixed;
@@ -254,56 +294,64 @@
 
                 <nav id="sidebarMenu" class="col-md-4 col-lg-3 d-md-block sidebar collapse p-0">
 
-                    <div class="position-sticky sidebar-sticky d-flex flex-column justify-content-center align-items-center">
-                        <a class="navbar-brand" href="{{ route('home') }}">
-                            <img src="{{ asset('images/templatemo-barber-logo.png') }}" class="logo-image img-fluid" alt="Barber Shop Logo">
-                        </a>
+                    <div class="position-sticky sidebar-sticky d-flex flex-column align-items-center" style="height: 100vh;">
+                        <div class="d-flex flex-column align-items-center flex-shrink-0 pt-4">
+                            <a class="navbar-brand" href="{{ route('home') }}">
+                                <img src="{{ asset('images/templatemo-barber-logo.png') }}" class="logo-image img-fluid" alt="Barber Shop Logo">
+                            </a>
 
-                        <ul class="nav flex-column">
-                            <li class="nav-item">
-                                <a class="nav-link click-scroll" href="#section_1">Home</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link click-scroll" href="#section_2">Our Story</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link click-scroll" href="#section_3">Services</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link click-scroll" href="#section_4">Price List</a>
-                            </li>
-                            
-                            @auth
-                                @if(Auth::user()->role === 'customer')
+                            <ul class="nav flex-column w-100 mt-4">
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('customer.appointments.index') }}">
-                                        <i class="bi bi-calendar-check me-2"></i>My Schedules
-                                    </a>
-                                </li>
-                                @endif
-                                <li class="nav-item" style="border-top: 1px solid rgba(0,0,0,0.1);">
-                                    <form method="POST" action="{{ route('logout') }}" id="logoutForm">
-                                        @csrf
-                                        <button type="submit" class="nav-link w-100 text-start border-0 bg-transparent"
-                                            style="font-size: 16px; color: var(--dark-color);"
-                                            onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
-                                            <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
-                                        </button>
-                                    </form>
-                                </li>
-                            @else
-                                <li class="nav-item mt-4 pt-3" style="border-top: 1px solid rgba(0,0,0,0.1);">
-                                    <a class="nav-link" href="{{ route('login') }}" style="font-size: 16px;">
-                                        <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
-                                    </a>
+                                    <a class="nav-link click-scroll" href="#section_1" style="color: #000;">Home</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('register') }}" style="font-size: 16px;">
-                                        <i class="bi bi-person-plus me-2"></i>Đăng ký
-                                    </a>
+                                    <a class="nav-link click-scroll" href="#section_2" style="color: #000;">Our Story</a>
                                 </li>
-                            @endauth
-                        </ul>
+                                <li class="nav-item">
+                                    <a class="nav-link click-scroll" href="#section_3" style="color: #000;">Services</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link click-scroll" href="#section_4" style="color: #000;">Price List</a>
+                                </li>
+                                
+                                @auth
+                                    @if(Auth::user()->role === 'customer')
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="{{ route('customer.appointments.index') }}" style="color: #000;">My Schedules</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="{{ route('customer.loyalty.index') }}" style="color: #000;">My Loyalty</a>
+                                    </li>
+                                    @endif
+                                @else
+                                    <li class="nav-item mt-4 pt-3" style="border-top: 1px solid rgba(0,0,0,0.1);">
+                                        <a class="nav-link" href="{{ route('login') }}" style="font-size: 16px;">
+                                            <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="{{ route('register') }}" style="font-size: 16px;">
+                                            <i class="bi bi-person-plus me-2"></i>Đăng ký
+                                        </a>
+                                    </li>
+                                @endauth
+                            </ul>
+                        </div>
+
+                        @auth
+                        <div class="mt-auto w-100" style="border-top: 1px solid rgba(0,0,0,0.1);">
+                            <li class="nav-item logout-item" style="list-style: none;">
+                                <form method="POST" action="{{ route('logout') }}" id="logoutForm">
+                                    @csrf
+                                    <button type="submit" class="nav-link w-100 text-start border-0 bg-transparent"
+                                        style="font-size: 16px; color: #000; padding: 12px 20px;"
+                                        onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
+                                        Đăng xuất
+                                    </button>
+                                </form>
+                            </li>
+                        </div>
+                        @endauth
                     </div>
                 </nav>
                 
@@ -399,9 +447,8 @@
                     msgDiv.className = `chat-msg ${sender}`;
                     
                     if (isImage) {
-                        msgDiv.innerHTML = text; // Expecting HTML like <img src="...">
+                        msgDiv.innerHTML = text;
                     } else {
-                        // Very simple markdown to HTML (just line breaks and bold)
                         const formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
                         msgDiv.innerHTML = formattedText;
                     }
@@ -466,16 +513,13 @@
                         if (response.ok && data.success) {
                             appendMessage(data.reply, 'bot');
                             
-                            // Cập nhật lại lịch sử với tin nhắn mới nhất
                             if (data.history) {
                                 chatHistory = data.history;
                             } else {
-                                // Fallback nếu backend không trả về full history
                                 chatHistory.push({ role: 'user', text: text });
                                 chatHistory.push({ role: 'model', text: data.reply });
                             }
                         } else {
-                            // If 401 Unauthorized
                             if (response.status === 401) {
                                 appendMessage('Vui lòng đăng nhập để sử dụng tính năng Chat.', 'bot');
                             } else {

@@ -77,4 +77,12 @@ class Barber extends Model
     {
         return $this->hasMany(BarberSchedule::class);
     }
+
+    /**
+     * Một barber có nhiều cấu hình hoa hồng
+     */
+    public function commissions(): HasMany
+    {
+        return $this->hasMany(Commission::class);
+    }
 }

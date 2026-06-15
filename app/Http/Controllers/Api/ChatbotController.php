@@ -239,10 +239,10 @@ Lưu ý: Chỉ dùng các thợ và dịch vụ có trong danh sách trên. Giao
         ]);
 
         try {
-            $response = Http::timeout(30)
+            $response = Http::timeout(120)
                 ->withoutVerifying()
                 ->withHeaders(['Content-Type' => 'application/json'])
-                ->post("https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={$apiKey}", [
+                ->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={$apiKey}", [
                     'contents' => $geminiContents,
                 ]);
 

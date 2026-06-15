@@ -94,13 +94,14 @@
                     <div class="services-thumb">
                         @php
                             $serviceImageMap = [
-                                'Cat toc' => 'haircut.png',
-                                'Cao mat' => 'hairdresser-grooming-client.jpg',
-                                'Goi dau' => 'hairdresser-grooming-their-client.jpg',
-                                'Combo' => 'combo.png'
+                                'cat toc' => 'haircut.png',
+                                'cao mat' => 'hairdresser-grooming-client.jpg',
+                                'goi dau' => 'hairdresser-grooming-their-client.jpg',
+                                'combo' => 'combo.png',
                             ];
                             // Nếu tên không khớp, fallback về 1 ảnh mặc định
-                            $imageName = $serviceImageMap[$service->name] ?? 'hairdresser-grooming-their-client.jpg';
+                            $normalizedServiceName = mb_strtolower(trim(\Illuminate\Support\Str::ascii($service->name)));
+                            $imageName = $serviceImageMap[$normalizedServiceName] ?? 'hairdresser-grooming-their-client.jpg';
                         @endphp
                         <img src="{{ asset('images/services/' . $imageName) }}" class="services-image img-fluid" alt="{{ $service->name }}">
 

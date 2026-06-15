@@ -29,9 +29,21 @@ class AppServiceProvider extends ServiceProvider
         Appointment::observe(AppointmentObserver::class);
         Event::listen(InvoicePaid::class, AddLoyaltyPoints::class);
 
-        // Ép Laravel luôn tạo link dạng https khi chạy trên môi trường thật (Production)
-        if (config('app.env') === 'production' || env('APP_ENV') === 'production') {
-            URL::forceScheme('https');
+        // Tự động tạo symlink storage nếu chưa có (fix lỗi ảnh avatar barber bị 404 do chưa link)
+        if (!app()->runningInConsole() && !file_exists(public_path('storage'))) {
+            try {
+                \Illuminate\Support\Facades\Artisan::call('storage:link');
+            } catch (\Exception $e) {
+                // Ignore
+            }
+        }
+
+        // Ép Laravel luôn tạo link dạng https khi không phải là localhost (fix lỗi vỡ icon/font/ảnh do HTTP/HTTPS mixed content)
+        if (!app()->runningInConsole()) {
+            $host = request()->getHost();
+            if (!in_array($host, ['127.0.0.1', 'localhost', '::1']) || config('app.env') === 'production') {
+                URL::forceScheme('https');
+            }
         }
     }
 }

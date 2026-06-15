@@ -9,6 +9,8 @@ use App\Observers\AppointmentObserver;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
+use Illuminate\Support\Facades\URL;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -26,5 +28,10 @@ class AppServiceProvider extends ServiceProvider
     {
         Appointment::observe(AppointmentObserver::class);
         Event::listen(InvoicePaid::class, AddLoyaltyPoints::class);
+
+        // Ép Laravel luôn tạo link dạng https khi chạy trên môi trường thật (Production)
+        if (config('app.env') === 'production' || env('APP_ENV') === 'production') {
+            URL::forceScheme('https');
+        }
     }
 }

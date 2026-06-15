@@ -9,7 +9,19 @@ return new class extends Migration
     public function up(): void
     {
         if (!Schema::hasColumn('barber_schedules', 'is_available')) {
+            // Drop foreign key constraint trước (nếu có)
+            try {
+                Schema::table('leave_requests', function (Blueprint $table) {
+                    $table->dropForeign(['barber_id']);
+                });
+            } catch (\Exception $e) {
+                // Chưa có FK, bỏ qua
+            }
+
             Schema::table('barber_schedules', function (Blueprint $table) {
+                // Drop foreign key constraint trước khi drop index
+                $table->dropForeign(['barber_id']);
+                
                 // Drop unique key cũ (barber_id, day_of_week)
                 $table->dropUnique(['barber_id', 'day_of_week']);
                 
@@ -19,6 +31,9 @@ return new class extends Migration
                 
                 // Tạo unique key mới bao gồm specific_date
                 $table->unique(['barber_id', 'day_of_week', 'specific_date'], 'barber_schedules_unique');
+                
+                // Thêm lại foreign key
+                $table->foreign('barber_id')->references('id')->on('barbers')->onDelete('cascade');
             });
         }
     }

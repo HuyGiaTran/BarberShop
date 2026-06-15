@@ -152,14 +152,3 @@ Route::middleware(['auth', 'barber'])->prefix('/barber')->name('barber.')->group
         Route::delete('/{leaveRequest}', [BarberLeaveRequestController::class, 'cancel'])->name('cancel');
     });
 });
-
-// TEMPORARY ROUTE TO RESET ADMIN PASSWORD
-Route::get('/reset-admin-password-temp', function () {
-    $user = \App\Models\User::where('email', 'admin@gmail.com')->first();
-    if ($user) {
-        $user->password = \Illuminate\Support\Facades\Hash::make('12345678');
-        $user->save();
-        return 'Reset password cho admin@gmail.com thanh 12345678 thanh cong!';
-    }
-    return 'Khong tim thay user admin!';
-});
